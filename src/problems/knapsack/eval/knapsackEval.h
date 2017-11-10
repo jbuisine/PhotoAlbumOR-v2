@@ -105,10 +105,11 @@ public:
         }
 
         if(weightsSum > capacity){
-            profitsSum -= beta * (weightsSum - capacity);
+            profitsSum -= beta * abs(weightsSum - capacity);
         }
 
         _solution.fitness(profitsSum);
+        _solution.weight(weightsSum);
     }
 
 
@@ -127,7 +128,7 @@ public:
      * @return profits vector
      */
     vector<unsigned int>* getP() {
-        return W;
+        return P;
     }
 
     /*
@@ -146,24 +147,6 @@ public:
      */
     double getBeta(){
         return beta;
-    }
-
-    /*
-     * to get profits sum
-     *
-     * @return profits sum
-     */
-    double getProfitsSum(){
-        return profitsSum;
-    }
-
-    /*
-     * to get weights sum
-     *
-     * @return weights sum
-     */
-    double getWeightsSum(){
-        return weightsSum;
     }
 
     /*

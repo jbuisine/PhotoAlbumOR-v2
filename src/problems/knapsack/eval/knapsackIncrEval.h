@@ -29,8 +29,6 @@ public:
         P = _knapsackEval.getP();
         W = _knapsackEval.getW();
         capacity = _knapsackEval.getCapacity();
-        profitsSum = _knapsackEval.getProfitsSum();
-        weightsSum = _knapsackEval.getWeightsSum();
         beta = _knapsackEval.getBeta();
     }
 
@@ -42,27 +40,46 @@ public:
      */
     virtual void operator()(EOT & _solution, Neighbor & _neighbor) {
 
-        double delta = 0.;
-
         unsigned int k = _neighbor.key;
 
-        if (_solution[k] == 1){
-            delta += P->at(k);
-            weightsSum += W->at(k);
+        double deltaProfit = 0.;
+        double deltaWeight = 0.;
+
+        double weightSum = 0.;
+
+        for(int i = 0; i < nbVar; i++)
+            if(_solution[i] == 1)
+                weightSum += W->at(i);
+
+        // if equal 1 we will store the reverse
+        if (_solution[k] == 0){
+            deltaProfit += P->at(k);
+            deltaWeight += W->at(k);
         }else{
-            delta -= P->at(k);
-            weightsSum -= W->at(k);
+            deltaProfit -= P->at(k);
+            deltaWeight -= W->at(k);
         }
 
-        // TODO how to know if solution already has this behavior
-        if(weightsSum > capacity){
-            delta -= beta * (weightsSum - capacity);
+        if((weightSum + deltaWeight) > capacity){
+
+            deltaProfit -= beta * abs((weightSum + deltaWeight) - capacity);
+
+        }else if(weightSum > capacity && ((weightSum + deltaWeight) <= capacity)){
+
+            deltaProfit += beta * abs(weightSum - capacity);
         }
 
         // move back the solution
-        _solution[k] = !_solution[k];
+        //_solution[k] = !_solution[k];
 
-        _neighbor.fitness(_solution.fitness() + delta);
+        double result = _solution.fitness() + deltaProfit;
+
+        if(result < 0){
+            result = 0;
+        }
+
+        _neighbor.fitness(result);
+        _neighbor.weight(weightSum);
     }
 
     /*
@@ -87,12 +104,6 @@ private:
 
     // vector of weights
     std::vector<unsigned int>* W;
-
-    // store last profits obtained
-    double profitsSum;
-
-    // store last weightSum
-    double weightsSum;
 
     // store beta ratio
     double beta;

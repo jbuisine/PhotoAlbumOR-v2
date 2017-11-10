@@ -2,14 +2,6 @@
 // Created by jbuisine on 06/11/17.
 //
 
-//-----------------------------------------------------------------------------
-/** lesson1_simpleHC.cpp
- *
- * SV - 27/04/10 - version 1
- *
- */
-//-----------------------------------------------------------------------------
-
 // standard includes
 #define HAVE_SSTREAM
 
@@ -25,16 +17,15 @@
 // declaration of the namespace
 using namespace std;
 
-
 //-----------------------------------------------------------------------------
 // representation of solutions, and neighbors
-#include <ga/eoBit.h>                         // bit string : see also EO tutorial lesson 1: FirstBitGA.cpp
-#include <problems/bitString/moBitNeighbor.h> // neighbor of bit string
+#include "problems/knapsack/solution/eoBitKnapsack.h"           // bit string : see also EO tutorial lesson 1: FirstBitGA.cpp
+#include "problems/knapsack/solution/moBitKnapsackNeighbor.h"   // neighbor of bit string
 
 //-----------------------------------------------------------------------------
 // fitness function, and evaluation of neighbors
-#include "problems/eval/knapsackEval.h"
-#include "problems/eval/knapsackIncrEval.h"
+#include "problems/knapsack/eval/knapsackEval.h"
+#include "problems/knapsack/eval/knapsackIncrEval.h"
 #include <eval/moFullEvalByModif.h>
 
 //-----------------------------------------------------------------------------
@@ -52,11 +43,12 @@ using namespace std;
 // Declaration of types
 //-----------------------------------------------------------------------------
 // Indi is the typedef of the solution type like in paradisEO-eo
-typedef eoBit<unsigned int> Indi;                      // bit string with unsigned fitness type
+typedef eoBitKnapsack<unsigned int> Indi;                      // bit string with unsigned fitness type
+
 // Neighbor is the typedef of the neighbor type,
 // Neighbor = How to compute the neighbor from the solution + information on it (i.e. fitness)
 // all classes from paradisEO-mo use this template type
-typedef moBitNeighbor<unsigned int> Neighbor;         // bit string neighbor with unsigned fitness type
+typedef moBitKnapsackNeighbor<unsigned int> Neighbor;         // bit string neighbor with unsigned fitness type
 
 
 // Main function
@@ -88,7 +80,7 @@ void main_function(int argc, char **argv)
     unsigned vecSize = vecSizeParam.value();
 
     // number of iteration
-    eoValueParam<unsigned int> iterParam(100, "iterParam", "max iteration", 'I');
+    eoValueParam<unsigned int> iterParam(1000, "iterParam", "max iteration", 'I');
     parser.processParam( iterParam, "Iteration" );
     unsigned iterMax = iterParam.value();
 
