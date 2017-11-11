@@ -71,5 +71,6 @@ add_subdirectory(application)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}./cmake/module/FindParadiseo.cmake")
 
 find_package(Paradiseo COMPONENTS moeo eoutils eo)
+find_package(RapidJSON)
 
 include_directories(${PARADISEO_INCLUDE_DIR})
