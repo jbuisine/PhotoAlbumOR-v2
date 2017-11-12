@@ -30,16 +30,16 @@ class Album:
     @param numPage the number fo the page
     @param photoList the ordered list of photo in the page
     '''
-    def create_page(self, html_dir, photos_dir, numPage, photoList):
+    def create_page(self, html_dir, numPage, photoList):
         f = open(os.path.join(html_dir, "%s_%d.html" % (self.album["basename"], numPage)), "w")
-        self.create_body_page(f, photos_dir, numPage, photoList)
+        self.create_body_page(f, numPage, photoList)
         f.close()
 
     '''
     Create the bottom of the page 
     @param numPage the number fo the page
     '''
-    def create_body_page(self, f, photos_dir, numPage, photoList):
+    def create_body_page(self, f, numPage, photoList):
         f.write("<div id=\"album\">\n")
         f.write("<h3>Page %d</h3>\n" % (numPage + 1))
 
@@ -49,7 +49,7 @@ class Album:
         pos = 0
         for i in photoList:
             photo = self.album["pages"][numPage]["photos"][pos]
-            f.write("<img src=\"/<%%= templateName %%>/%s/%s\" width=\"%d\" height=\"%d\">\n" % (photos_dir, self.photos[i]["name"], photo["width"], photo["height"]))
+            f.write("<img src=\"../img/%s\" width=\"%d\" height=\"%d\">\n" % (self.photos[i]["name"], photo["width"], photo["height"]))
             pos += 1
 
         f.write("</div>\n") # pictures
@@ -67,17 +67,17 @@ class Album:
         f.write("<ul class=\"pagination\">\n")
 
         if numPage > 0:
-            f.write("<li><a href=\"/template/<%%= templateName %%>/%d\" aria-label=\"Previous\"><span aria-hidden=\"true\">&laquo;</span></a></li>\n" % (numPage -1))
+            f.write("<li><a href=\"page_%d.html\" aria-label=\"Previous\"><span aria-hidden=\"true\">&laquo;</span></a></li>\n" % (numPage -1))
 
         for i in range(0, self.album["page"]):
             if(i == numPage):
                 f.write("<li class=\"active\">")
             else:
                 f.write("<li>")
-            f.write("<a href=\"/template/<%%= templateName %%>/%d\">%d</a></li>\n" % (i, i+1))
+            f.write("<a href=\"page_%d.html\">%d</a></li>\n" % (i, i+1))
 
         if numPage < self.album["page"] - 1:
-            f.write("<li><a href=\"/template/<%%= templateName %%>/%d\" aria-label=\"Next\"><span aria-hidden=\"true\">&raquo;</span></a></li>\n" % (numPage + 1))
+            f.write("<li><a href=\"page_%d.html\" aria-label=\"Next\"><span aria-hidden=\"true\">&raquo;</span></a></li>\n" % (numPage + 1))
 
         f.write("</ul>\n")
         f.write("</nav>\n")
@@ -89,7 +89,7 @@ class Album:
     @param photos_dir
     @param solution_name the order of the photo in the album
     '''
-    def create_album(self, html_dir, photos_dir, solution_name, line_file):
+    def create_album(self, html_dir, solution_name, line_file):
         # read the solution order
         with open(solution_name) as f:
             lines = f.readlines()
@@ -97,59 +97,48 @@ class Album:
 
         n = 0
         for i in range(self.album["page"]):
-            self.create_page(html_dir, photos_dir, i, photosOrder[n:(n+self.album["pagesize"][i])])
+            self.create_page(html_dir, i, photosOrder[n:(n+self.album["pagesize"][i])])
             n = n + self.album["pagesize"][i]
 
 #===================================================================
 if __name__ == '__main__':
-    album_name     = "../resources/data/"                       # file name of the album information
-    html_dir       = "../www/views/templates/"                  # path to html source files
     photos_dir     = "img"                                      # path to images from the html directory
-    solution_name  = "../resources/data/chronologic-order.sol"  # (default) file name of the solution which gives the assignement of the photos
 
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 3:
         if not os.path.exists(sys.argv[1]):
-            print ("File not found: " + sys.argv[1])
+            print ("Template not found: " + sys.argv[1])
             sys.exit()
         else:
-            solution_name = sys.argv[1]
+            template_folder = sys.argv[1]
 
-        if not os.path.exists(album_name + sys.argv[3] + "/" + sys.argv[2]):
+        if not os.path.exists(template_folder + sys.argv[2]):
             print ("Album type not found: " + sys.argv[2])
             sys.exit()
         else:
-            album_name += sys.argv[3] + "/" +sys.argv[2]
-            print (album_name)
+            album_name = template_folder + sys.argv[2]
 
-        if not os.path.exists(html_dir + sys.argv[3]):
-            print ("Template folder not found: " + sys.argv[3])
+        if not os.path.exists(template_folder + "/info-photo.json"):
+            print ("Info photo JSON file not exist for this template: " + template_folder) # file name of the photo information
             sys.exit()
         else:
-            photos_name    = html_dir + sys.argv[3] + "/info-photo.json"        # file name of the photo information
-            album = Album(album_name, photos_name)
-            album.create_album(html_dir + sys.argv[3], photos_dir, solution_name, sys.argv[4])
+            album_info = template_folder + "/info-photo.json"
 
-            #Write info values
-            with open(solution_name) as f:
-                lines = f.readlines()
+        if not os.path.exists(template_folder + "solutions/" + sys.argv[3]):
+            print ("Solution file not found into: " + template_folder + "solutions") # file name of the photo information
+            sys.exit()
+        else:
+            solution_name = template_folder + "solutions/" + sys.argv[3]
 
-                head = lines[0].split(',')
-                values = lines[int(sys.argv[4])].split(',')
+        if not len(sys.argv) > 4:
+            solution_line = 0
+        else:
+            solution_line = sys.argv[4]
 
-                info = " ["
-
-                for (i, item) in enumerate(head):
-                    info +=  item + " : " + format(float(values[i+1]), '.2f')
-
-                    if i+1 < len(head):
-                        info += ", "
-
-                info += "] "
-
-                infoFile = open(html_dir + sys.argv[3] + "/info.txt", "w")
-                infoFile.write(solution_name + info)
-                infoFile.close()
-
+        album = Album(album_name, album_info)
+        album.create_album(template_folder + "html", solution_name, solution_line)
+    else:
+        print ("Some arguments are required")
+        sys.exit()
 
 
 
