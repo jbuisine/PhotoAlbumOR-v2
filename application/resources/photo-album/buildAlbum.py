@@ -40,7 +40,17 @@ class Album:
     @param numPage the number fo the page
     '''
     def create_body_page(self, f, numPage, photoList):
-        f.write("<div id=\"album\">\n")
+        # begin page
+        f.write("<!DOCTYPE html>")
+        f.write("<html>")
+        f.write("<head>")
+        f.write("<title>Photo album</title>")
+        f.write("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">")
+        f.write("</head>")
+        f.write("<body>")
+
+        # album part
+        f.write("<div class=\"container\" style=\"text-algin:center;\" id=\"album\">\n")
         f.write("<h3>Page %d</h3>\n" % (numPage + 1))
 
         self.create_navigation(f, numPage)
@@ -56,6 +66,10 @@ class Album:
         self.create_navigation(f, numPage)
 
         f.write("</div>\n") # album
+
+        # end page
+        f.write("</body>")
+        f.write("</html>")
 
     '''
     Create the navigation link in the album
@@ -103,6 +117,7 @@ class Album:
 #===================================================================
 if __name__ == '__main__':
     photos_dir     = "img"                                      # path to images from the html directory
+    solutions_dir  = "/solutions/"
 
     if len(sys.argv) > 3:
         if not os.path.exists(sys.argv[1]):
@@ -112,7 +127,7 @@ if __name__ == '__main__':
             template_folder = sys.argv[1]
 
         if not os.path.exists(template_folder + sys.argv[2]):
-            print ("Album type not found: " + sys.argv[2])
+            print ("Album disposition not found: " + sys.argv[2])
             sys.exit()
         else:
             album_name = template_folder + sys.argv[2]
@@ -123,11 +138,11 @@ if __name__ == '__main__':
         else:
             album_info = template_folder + "/info-photo.json"
 
-        if not os.path.exists(template_folder + "solutions/" + sys.argv[3]):
-            print ("Solution file not found into: " + template_folder + "solutions") # file name of the photo information
+        if not os.path.exists(template_folder + solutions_dir + sys.argv[3]):
+            print ("Solution file not found into: " + template_folder + solutions_dir) # file name of the photo information
             sys.exit()
         else:
-            solution_name = template_folder + "solutions/" + sys.argv[3]
+            solution_name = template_folder + solutions_dir + sys.argv[3]
 
         if not len(sys.argv) > 4:
             solution_line = 0
@@ -137,7 +152,11 @@ if __name__ == '__main__':
         album = Album(album_name, album_info)
         album.create_album(template_folder + "html", solution_name, solution_line)
     else:
-        print ("Some arguments are required")
+        print("Some arguments are required : ")
+        print(" 1 - Template path")
+        print(" 2 - Album disposition file")
+        print(" 3 - Solution file ")
+        print(" 4 - Solution line (Optional, default 0)")
         sys.exit()
 
 
