@@ -6,7 +6,7 @@
 #define PHOTOALBUM_MOPHOTOALBUMQAPINCREVAL_H
 
 #include <eval/moEval.h>
-#include <eval/qapEval.h>
+#include "photoAlbumQAPEval.h"
 
 /**
  * Incremental evaluation Function for the QAP problem
@@ -21,7 +21,7 @@ public:
      * default constructor
      * @param _qapEval full evaluation of the QAP problem
      */
-    moQAPIncrEval(QAPeval<EOT> & _qapEval) {
+    moPhotoAlbumQAPIncrEval(photoAlbumQAPEval<EOT> & _qapEval) {
         n = _qapEval.getNbVar();
         A = _qapEval.getA();
         B = _qapEval.getB();
@@ -56,10 +56,10 @@ private:
     int n;
 
     // matrix A
-    int ** A;
+    double ** A;
 
     // matrix B
-    int ** B;
+    double ** B;
 
 };
 

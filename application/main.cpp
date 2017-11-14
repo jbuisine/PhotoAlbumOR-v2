@@ -1,231 +1,218 @@
 //
-// Created by jbuisine on 11/11/17.
+// Created by jbuisine on 06/11/17.
 //
 
-// rapidjson/example/simpledom/simpledom.cpp`
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
-#include <iostream>
-#include <fstream>
+// standard includes
+#define HAVE_SSTREAM
 
-using namespace rapidjson;
+#include <stdexcept>  // runtime_error
+#include <iostream>   // cout
+#include <sstream>    // ostrstream, istrstream
+#include <fstream>
+#include <string.h>
+
+// the general include for eo
+#include <eo>
+
+// declaration of the namespace
 using namespace std;
 
-// Distance between photos
-int photoSize;
-double ** photoDist;
+//-----------------------------------------------------------------------------
+// representation of solutions, and neighbors
+#include "problems/knapsack/solution/eoBitKnapsack.h"           // bit string : see also EO tutorial lesson 1: FirstBitGA.cpp
+#include "problems/knapsack/solution/moBitKnapsackNeighbor.h"   // neighbor of bit string
 
-// Inverse of the distance between positions in the album
-int albumSize;
-double ** albumInvDist;
+//-----------------------------------------------------------------------------
+// fitness function, and evaluation of neighbors
+#include "problems/photo-album/eval/photoAlbumQAPEval.h"
+#include "problems/photo-album/eval/moPhotoAlbumQAPIncrEval.h"
+#include <eval/moFullEvalByModif.h>
+
+//-----------------------------------------------------------------------------
+// neighborhood description
+#include <neighborhood/moOrderNeighborhood.h> // visit all neighbors in increasing order of bit index
+#include <neighborhood/moRndWithoutReplNeighborhood.h>
+//-----------------------------------------------------------------------------
+// the simple Hill-Climbing local search
+#include <algo/moSimpleHC.h>
+#include <algo/moFirstImprHC.h>
+
+// Continuator limits
+#include <continuator/moIterContinuator.h>
+#include <eoInt.h>
+#include <problems/permutation/moShiftNeighbor.h>
+#include <problems/permutation/moSwapNeighbor.h>
+
+// Declaration of types
+//-----------------------------------------------------------------------------
+// Indi is the typedef of the solution type like in paradisEO-eo
+typedef eoInt<eoMinimizingFitness> Indi;                      // QAP sol
+
+// Neighbor is the typedef of the neighbor type,
+// Neighbor = How to compute the neighbor from the solution + information on it (i.e. fitness)
+// all classes from paradisEO-mo use this template type
+typedef moShiftNeighbor<Indi> Neighbor;         // bit string neighbor with unsigned fitness type
 
 
-/**
- *
- * Example of json file parsing
- *
- * see: https://code.google.com/p/json-simple/
- * for more example to decode json under java
- *
- */
-void readPhotoExample(const char * fileName) {
-    Document document;
+// Main function
+//-----------------------------------------------------------------------------
+void main_function(int argc, char **argv)
+{
+    /* =========================================================
+     *
+     * Parameters from parser
+     *
+     * ========================================================= */
+    // more information on the input parameters: see EO tutorial lesson 3
+    // but don't care at first it just read the parameters of the bit string size and the random seed.
 
-    // read the file
-    std::ifstream f(fileName);
-    std::string lines((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-    f.close();
+    // First define a parser from the command-line arguments
+    eoParser parser(argc, argv);
 
-    // parser the json file
-    document.Parse(lines.c_str());
+    // For each parameter, define Parameter, read it through the parser,
+    // and assign the value to the variable
 
-    // to print all the document
-    /*
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
-    document.Accept(writer);
-    std::cout << buffer.GetString() << std::endl;
-    */
+    // random seed parameter
+    eoValueParam<uint32_t> seedParam(time(0), "seed", "Random number seed", 'S');
+    parser.processParam( seedParam );
+    unsigned seed = seedParam.value();
 
-    // id of the first element
-    std::cout << document[0]["id"].GetInt() << std::endl;
+    // length of the bit string
+    eoValueParam<unsigned int> vecSizeParam(54, "vecSize", "Genotype size", 'V');
+    parser.processParam( vecSizeParam, "Representation" );
+    unsigned vecSize = vecSizeParam.value();
 
-    const Value& w = document[0]["tags"]["classes"];
+    // number of iteration
+    eoValueParam<unsigned int> iterParam(1000, "iterParam", "max iteration", 'I');
+    parser.processParam( iterParam, "Iteration" );
+    unsigned iterMax = iterParam.value();
 
-    for (SizeType i = 0; i < w.Size(); i++) // rapidjson uses SizeType instead of size_t.
-        printf("w[%d] = %s\n", i, w[i].GetString());
-}
+    // the name of the "status" file where all actual parameter values will be saved
+    string str_status = parser.ProgramName() + ".status"; // default value
+    eoValueParam<string> statusParam(str_status.c_str(), "status", "Status file");
+    parser.processParam( statusParam, "Persistence" );
 
-double inverseDistance(int size, int i, int j) {
-    // number of pages
-    int pagei = i / size;
-    int pagej = j / size;
-
-    if (pagei != pagej)
-        // not on the same page: distance is infinite. Another choice is possible of course!
-        return 0;
-    else {
-        // positions in the page
-        int posi = i % size;
-        int posj = j % size;
-
-        // coordinate on the page
-        int xi = posi % 2;
-        int yi = posi / 2;
-        int xj = posj % 2;
-        int yj = posj / 2;
-
-        // Manhatthan distance
-        double d = (double) (abs(xi - xj) + abs(yi - yj));
-
-        if (d == 0)
-            return -1;
-        else
-            return ((double) 1) / d;
+    // do the following AFTER ALL PARAMETERS HAVE BEEN PROCESSED
+    // i.e. in case you need parameters somewhere else, postpone these
+    if (parser.userNeedsHelp()) {
+        parser.printHelp(cout);
+        exit(1);
     }
-}
-
-void computeAlbumDistances(const char * fileName) {
-    Document album;
-
-    // read the file
-    std::ifstream f(fileName);
-    std::string lines((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-    f.close();
-
-    // parser the json file
-    album.Parse(lines.c_str());
-
-    // number of pages
-    int nPage = album["page"].GetInt();
-
-    // number of photo in each page
-    const Value& pageSize = album["pagesize"];
-
-    // number on the first page
-    int size = pageSize[0].GetInt();
-
-    // total number of photo in the album
-    albumSize = 0;
-    for(int i = 0; i < pageSize.Size(); i++)
-        albumSize += pageSize[i].GetInt();
-
-    albumInvDist = new double*[albumSize];
-    for(int i = 0; i < albumSize; i++)
-        albumInvDist[i] = new double[albumSize];
-
-    // compute the distance
-    for(int i = 0; i < albumSize; i++)
-        for(int j = 0; j < albumSize; j++)
-            albumInvDist[i][j] = inverseDistance(size, i, j);
-
-    /*
-    for(int i = 0; i < albumSize; i++) {
-      for(int j = 0; j < albumSize; j++) {
-	cout << " " <<  albumInvDist[i][j];
-      }
-      cout << endl;
-    }
-    */
-}
-
-void computePhotoDistances(const char * fileName) {
-    Document document;
-
-    // read the file
-    std::ifstream f(fileName);
-    std::string lines((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-    f.close();
-
-    // parser the json file
-    document.Parse(lines.c_str());
-
-    const Value& array = document;
-
-    photoSize = array.Size();
-    photoDist = new double*[photoSize];
-    for(int i = 0; i < photoSize; i++)
-        photoDist[i] = new double[photoSize];
-
-    // distance based on the distance between average hash
-    for(int i = 0; i < photoSize; i++) {
-        const Value& d = array[i]["ahashdist"];
-        for(int j = 0; j < photoSize; j++) {
-            photoDist[i][j] = d[j].GetDouble();
-        }
+    if (statusParam.value() != "") {
+        ofstream os(statusParam.value().c_str());
+        os << parser;// and you can use that file as parameter file
     }
 
-    /*
-    for(int i = 0; i < photoSize; i++) {
-      for(int j = 0; j < photoSize; j++) {
-	cout << " " <<  photoDist[i][j];
-      }
-      cout << endl;
+    /* =========================================================
+     *
+     * Random seed
+     *
+     * ========================================================= */
+
+    // reproducible random seed: if you don't change SEED above,
+    // you'll aways get the same result, NOT a random run
+    // more information: see EO tutorial lesson 1 (FirstBitGA.cpp)
+    rng.reseed(seed);
+
+    /* =========================================================
+     *
+     * Initialization of the solution
+     *
+     * ========================================================= */
+
+    // a Indi random initializer: each bit is random
+    // more information: see EO tutorial lesson 1 (FirstBitGA.cpp)
+    eoUniformGenerator<int> uGen;
+    eoInitPermutation<Indi> random(vecSize);
+
+    /* =========================================================
+     *
+     * Eval fitness function (full evaluation)
+     *
+     * ========================================================= */
+
+    // the fitness function is just the number of 1 in the bit string
+    const char * path_dispo = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json";
+    const char * path_info = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/info-photo.json";
+    photoAlbumQAPEval<Indi> fullEval(path_info, path_dispo);
+
+    /* =========================================================
+     *
+     * evaluation of a neighbor solution
+     *
+     * ========================================================= */
+
+    // Use it if there is no incremental evaluation: a neighbor is evaluated by the full evaluation of a solution
+    // moFullEvalByModif<Neighbor> neighborEval(fullEval);
+
+    // Incremental evaluation of the neighbor: fitness is modified by +/- 1
+    moPhotoAlbumQAPIncrEval<Neighbor> neighborEval(fullEval);
+
+    /* =========================================================
+     *
+     * the neighborhood of a solution
+     *
+     * ========================================================= */
+
+    // Exploration of the neighborhood in increasing order of the neigbor's index:
+    // bit-flip from bit 0 to bit (vecSize - 1)
+    //moOrderNeighborhood<Neighbor> neighborhood(vecSize);
+
+    // For HC first improvement
+    moOrderNeighborhood<Neighbor> neighborhood(vecSize);
+
+    /* =========================================================
+     *
+     * the limit of iteration
+     *
+     * ========================================================= */
+
+    moIterContinuator<Neighbor> continuator(iterMax);
+
+    /* =========================================================
+     *
+     * the local search algorithm
+     *
+     * ========================================================= */
+
+    moFirstImprHC<Neighbor> hc(neighborhood, fullEval, neighborEval, continuator);
+
+    /* =========================================================
+     *
+     * executes the local search from a random solution
+     *
+     * ========================================================= */
+
+    // The current solution
+    Indi solution;
+
+    // Apply random initialization
+    random(solution);
+
+    // Evaluation of the initial solution:
+    // can be evaluated here, or else it will be done at the beginning of the local search
+    fullEval(solution);
+
+    // Output: the intial solution
+    std::cout << "initial: " << solution << std::endl ;
+
+    // Apply the local search on the solution !
+    hc(solution);
+
+    // Output: the final solution
+    std::cout << "final:   " << solution << std::endl ;
+
+}
+
+// A main that catches the exceptions
+
+int main(int argc, char **argv)
+{
+    try {
+        main_function(argc, argv);
     }
-    */
-}
-
-/**
- *  Compute the matrice of distance between solutions
- *                  and of inverse distance between positions
- */
-void computeDistances(const char * photoFileName, const char * albumFileName) {
-    computePhotoDistances(photoFileName);
-    computeAlbumDistances(albumFileName);
-}
-
-/**
- * Un exemple de fonction objectif (à minimiser):
- *   distance entre les photos pondérées par l'inverse des distances spatiales sur l'album
- *   Modélisaiton comme un problème d'assignement quadratique (QAP)
- *
- *   Dans cette fonction objectif,
- *      pas de prise en compte d'un effet de page (harmonie/cohérence de la page)
- *      par le choix de distance, pas d'intéraction entre les photos sur des différentes pages
- */
-double eval(int * solution) {
-    double sum = 0;
-
-    for(int i = 0; i < albumSize; i++) {
-        for(int j = i + 1; j < albumSize; j++) {
-            sum += photoDist[ solution[i] ][ solution[j] ] * albumInvDist[i][j] ;
-        }
+    catch (exception& e) {
+        cout << "Exception: " << e.what() << '\n';
     }
-
-    return sum;
-}
-
-int main() {
-    // Path to the photo information file in json format
-    const char * photoFileName = "/Users/verel/enseignement/15-16/RO/projet/prj1-ro/data/info-photo.json";
-    // Path to the album information file in json format
-    const char * albumFileName = "/Users/verel/enseignement/15-16/RO/projet/prj1-ro/data/info-album.json";
-
-    // uncomment to test it
-    //readPhotoExample(photoFileName);
-
-    computeDistances(photoFileName, albumFileName);
-
-    // one basic solution : order of the index
-
-    int numberOfPhoto = 55;
-    int solution[numberOfPhoto];
-
-    for(int i = 0; i < 55; i++)
-        solution[i] = i;
-
-    // compute the fitness
-    cout << eval(solution) << endl;
-
-    // free memory
-    for(int i = 0; i < photoSize; i++)
-        delete [] photoDist[i];
-    delete [] photoDist;
-
-    for(int i = 0; i < albumSize; i++)
-        delete [] albumInvDist[i];
-    delete [] albumInvDist;
-
-    return 0;
+    return 1;
 }

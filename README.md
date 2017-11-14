@@ -40,8 +40,12 @@ cmake ..
 
 First of all, you need to respect this folder template architecture :
 
-TemplateFolder :
-- img/ 
+Template folder structure :
+- img/*
+- html/*
+- solutions/*
+- album-disposition.json
+- info-photo.json
 
 #### 1. Clarifai API data
 Generate tags information from an template folder :
@@ -69,6 +73,18 @@ python extractInfo.py <template-folder>
 ```
 python disposition.py <template-folder> <output-filename> <x-axis-number-photos> <y-axis-number-photos> <number-of-pages>
 ```
+
+#### 4. Generate photo album
+
+```
+python buildAlbum.py <template-folder> <disposition-file> <solution-file> (<solution-line>)
+```
+
+Example :
+```
+python buildAlbum.py templates/FirstTemplate/ album-6-2per3.json chronologic-order.sol
+```
+
 ## Licence
 
 [CeCILL](http://www.cecill.info/index.en.html)
