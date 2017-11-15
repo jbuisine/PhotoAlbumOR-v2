@@ -132,8 +132,8 @@ void main_function(int argc, char **argv)
      * ========================================================= */
 
     // the fitness function is just the number of 1 in the bit string
-    const char * path_dispo = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json";
-    const char * path_info = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/info-photo.json";
+    const char * path_dispo = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/mo-photo-album/templates/FirstTemplate/album-6-2per3.json";
+    const char * path_info = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/mo-photo-album/templates/FirstTemplate/info-photo.json";
     photoAlbumQAPEval<Indi> fullEval(path_info, path_dispo);
 
     /* =========================================================
