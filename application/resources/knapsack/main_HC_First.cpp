@@ -2,9 +2,6 @@
 // Created by jbuisine on 06/11/17.
 //
 
-// standard includes
-#define HAVE_SSTREAM
-
 #include <stdexcept>  // runtime_error
 #include <iostream>   // cout
 #include <sstream>    // ostrstream, istrstream

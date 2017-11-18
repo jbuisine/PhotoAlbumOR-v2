@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Here define your project name
-project(projectName)
+project(photoAlbum)
 
 # Here define the name and the version of your package
 SET(PACKAGE_NAME "packageName" CACHE STRING "Package name" FORCE)

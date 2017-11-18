@@ -20,27 +20,28 @@ def index_list(path):
 def open_images(path, ids):
     l = [ ]
     for i in ids:
-        print("here")
-        print(i)
+        print("IMAGE ID[", i, "] ... done")
         im = Image.open(os.path.join(path, "rIMG_%d.jpg" % i))
         # hash of the image
         l.append({'id': i, 'image': im, 'ahash': imagehash.average_hash(im), 'phash': imagehash.phash(im), 'dhash': imagehash.dhash(im)})
     return l
 
-def infos(images, tagfilename, scorefilename):
+def infos(images, tagfilename):
     tags = tag_info(tagfilename)
-    #scores = score_info(scorefilename)
 
     list_info = [ ]
     i = 0
     for image in images:
         d = info(i, images)
 
-        elem = filter(lambda e: e['id'] == image['id'], tags)
-        d['tags'] = { 'classes':elem[0]['classes'], 'probs': elem[0]['probs']}
-        #elem = filter(lambda e: e['id'] == image['id'], scores)
-        #d['score'] = elem[0]['score']
+        elem = list(filter(lambda e: e['id'] == image['id'], tags))
 
+        imageTags = []
+
+        for tag in elem[0]['tags']:
+            imageTags.append({'id': tag['name'], 'value': tag['value']})
+
+        d['tags'] = imageTags
         list_info.append(d)
         i += 1
 
@@ -127,15 +128,7 @@ def tag_info(tagfilename):
 
     res = [ ]
     for elem in l:
-        res.append({'id': elem['id'], 'classes': elem['results'][0]['result']['tag']['classes'], 'probs': elem['results'][0]['result']['tag']['probs']})
-    return res
-
-def score_info(scorefilename):
-    res = [ ]
-    with open(scorefilename) as f:
-        for line in f.readlines():
-            l = line.split()
-            res.append({'id': int(l[0]), 'score': int(l[1])})
+        res.append({'id': elem['id'], 'tags': elem['outputs'][0]['data']['concepts']})
     return res
 
 #===================================================================
@@ -145,14 +138,13 @@ if __name__ == '__main__':
 
         path = sys.argv[1] + "/img"
         tagfile = sys.argv[1] + "/taglist.pkl"
-        scorefile = sys.argv[1] + "/score_photo.dat"
         fileoutname = sys.argv[1] + "/info-photo.json"
 
         ids = index_list(path)
 
         l = open_images(path, ids)
 
-        jsoninfo = infos(l, tagfile, scorefile)
+        jsoninfo = infos(l, tagfile)
 
         with open(fileoutname, "w") as f:
             f.write(jsoninfo)
