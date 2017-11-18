@@ -6,7 +6,7 @@
 #define PHOTOALBUM_PHOTOALBUMOPMUTATIONEXCHANGE_H
 
 #include <eoSwapMutation.h>
-#include "PhotoAlbum.h"
+#include "PhotoAlbum.hpp"
 
 /**
  * Exchange mutation operator for the photo album QAP

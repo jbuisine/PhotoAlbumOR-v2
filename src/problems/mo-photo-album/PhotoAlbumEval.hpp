@@ -8,7 +8,7 @@
 
 #include <vector>
 #include <core/moeoEvalFunc.h>
-#include "PhotoAlbum.h"
+#include "PhotoAlbum.hpp"
 
 /**
  * Evaluation of the objective vector a (multi-objective) PhotoAlbum object
@@ -25,13 +25,22 @@ public:
      * @param _BOne : first similitude matrix
      * @param _BTwo : second similitude matrix
      */
-    PhotoAlbumEval(int _n, double** _A, double _BOne, double _BTwo);
+    PhotoAlbumEval(int _n, double** _A, double ** _BOne, double ** _BTwo)  : n(_n), A(_A), BOne(_BOne), BTwo(_BTwo) {};
 
     /**
      * computation of the multi-objective evaluation of a PhotoAlbum object
      * @param _photoAlbum the PhotoAlbum object to evaluate
      */
-    void operator()(PhotoAlbum & _photoAlbum);
+    void operator()(PhotoAlbum & _photoAlbum)
+    {
+        if (_photoAlbum.invalidObjectiveVector())
+        {
+            PhotoAlbumObjectiveVector objVector;
+            objVector[0] = similitudeObj1(_photoAlbum);
+            objVector[1] = similitudeObj2(_photoAlbum);
+            _photoAlbum.objectiveVector(objVector);
+        }
+    };
 
 
 private:
@@ -52,13 +61,35 @@ private:
      * computation of first objective
      * @param _photoAlbum the genotype to evaluate
      */
-    double similitudeObj1(const PhotoAlbum & _photoAlbum);
+    double similitudeObj1(const PhotoAlbum & _photoAlbum)
+    {
+        double score = 0.;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                score += BOne[_photoAlbum[i]][_photoAlbum[j]] * A[i][j];
+            }
+        }
+
+        return score;
+    };
 
     /**
      * computation of second objective
      * @param _photoAlbum the genotype to evaluate
      */
-    double similitudeObj2(const PhotoAlbum & _photoAlbum);
+    double similitudeObj2(const PhotoAlbum & _photoAlbum)
+    {
+        double score = 0.;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                score += BTwo[_photoAlbum[i]][_photoAlbum[j]] * A[i][j];
+            }
+        }
+
+        return score;
+    };
 };
 
 

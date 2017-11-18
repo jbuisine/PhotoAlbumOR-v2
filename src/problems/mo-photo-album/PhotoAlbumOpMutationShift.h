@@ -6,7 +6,7 @@
 #define PHOTOALBUM_PHOTOALBUMOPMUTATIONSHIFT_H
 
 #include <eoShiftMutation.h>
-#include "PhotoAlbum.h"
+#include "PhotoAlbum.hpp"
 
 /**
  * Shift mutation operator for photo album QAP

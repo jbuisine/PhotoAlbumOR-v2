@@ -6,7 +6,7 @@
 #define PHOTOALBUM_PHOTOALBUMINIT_H
 
 #include <eoInit.h>
-#include "PhotoAlbum.h"
+#include "PhotoAlbum.hpp"
 
 /**
  *  Initialization of a random genotype built by the default constructor of the PhotoAlbum class

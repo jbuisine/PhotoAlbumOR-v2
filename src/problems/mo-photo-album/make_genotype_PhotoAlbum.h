@@ -8,9 +8,9 @@
 
 #include <utils/eoParser.h>
 #include <utils/eoState.h>
-#include "PhotoAlbum.h"
-#include "PhotoAlbumInit.h"
-#include "utils/PhotoAlbumParser.h"
+#include <problems/mo-photo-album/PhotoAlbum.hpp>
+#include <problems/mo-photo-album/PhotoAlbumInit.h>
+#include "PhotoAlbumParser.hpp"
 
 /*
  * This function creates an eoInit<eoPhotoAlbum> that can later be used to initialize the population (see make_pop.h).
@@ -42,7 +42,7 @@ eoInit<PhotoAlbum> & do_make_genotype(eoParser& _parser, eoState& _state)
     unsigned int n = fParser.getN();
 
     // build of the initializer (a pointer, stored in the eoState)
-    eoInit<PhotoAlbum>* init = new PhotoAlbumInit(N);
+    eoInit<PhotoAlbum>* init = new PhotoAlbumInit(n);
 
     // store in state
     _state.storeFunctor(init);
