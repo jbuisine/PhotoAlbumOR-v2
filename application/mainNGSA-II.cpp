@@ -44,14 +44,14 @@ int main(int argc, char* argv[])
         /*** the representation-dependent things ***/
 
         // getting context files
-        std::string dataFileName = parser.getORcreateParam(std::string("/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/info-photo.json"),
+        std::string dataFileName = parser.getORcreateParam(std::string("../../application/resources/photo-album/templates/FirstTemplate/info-photo.json"),
                                                            "Data photos",
                                                            "Data photos file name",
                                                            'P',
                                                            "Representation",
                                                            false).value();
 
-        std::string dispositionFileName = parser.getORcreateParam(std::string("/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json"),
+        std::string dispositionFileName = parser.getORcreateParam(std::string("../../application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json"),
                                                                   "DispositionAlbum",
                                                                   "Disposition album file name",
                                                                   'D',
