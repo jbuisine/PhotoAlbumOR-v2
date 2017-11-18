@@ -61,12 +61,9 @@ def generate_page(x, y, nb, file):
 #===================================================================
 if __name__ == '__main__':
 
-    main_path = "./../resources/data/"
-
-
     if len(sys.argv) > 3:
 
-        template = sys.argv[1]
+        path = sys.argv[1]
         filename = sys.argv[2]
         x_elem = int(sys.argv[3])
         y_elem = int(sys.argv[4])
@@ -75,10 +72,10 @@ if __name__ == '__main__':
         if ".json" not in filename:
             filename = filename + ".json"
 
-        if not os.path.exists(main_path + template):
-            os.makedirs(main_path + template)
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-        path_file = main_path + template + "/" + filename
+        path_file = path + "/" + filename
 
         with open(path_file, "w+") as f:
             f.write("{\n")

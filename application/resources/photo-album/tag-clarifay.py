@@ -4,7 +4,8 @@ import os
 import sys
 import pickle
 
-from clarifai.client import ClarifaiApi
+from clarifai.rest import ClarifaiApp
+from clarifai.rest import Image as ClImage
 
 def save_obj(path, obj, name ):
     with open(path + '/'+ name + '.pkl', 'wb') as f:
@@ -30,10 +31,13 @@ def name_list(path, ids):
 
 def main(argv):
 
-    if len(sys.argv) > 1:
-        api = ClarifaiApi()
+    if len(sys.argv) > 2:
 
         path = argv[1]
+        clarifai_api_key = argv[2]
+
+        app = ClarifaiApp(api_key=clarifai_api_key)
+        model = app.models.get('general-v1.3')
 
         ids = index_list(path + "/img")
 
@@ -41,19 +45,20 @@ def main(argv):
 
         resp = []
         for elem in l:
-            with open(elem['fullname'], 'rb') as image_file:
-                print(elem['name'])
-                response = api.tag_images(image_file)
+            image_file = elem['fullname']
+            print(image_file)
+            image = ClImage(file_obj=open(image_file, 'rb'))
 
-                response['id'] = elem['id']
-                response['name'] = elem['name']
+            response = model.predict([image])
 
-                print(response)
-                resp.append(response)
+            response['id'] = elem['id']
+            response['name'] = elem['id']
+
+            resp.append(response)
         save_obj(path, resp, "taglist")
 
     else:
-        print("No path found")
+        print("No path found or Clarifai API key missing")
         sys.exit()
 
 
