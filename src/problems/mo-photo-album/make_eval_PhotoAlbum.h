@@ -31,7 +31,7 @@ eoEvalFuncCounter<PhotoAlbum> & do_make_eval(eoParser& _parser, eoState& _state,
     PhotoAlbumEval* plainEval = new PhotoAlbumEval(n, A, BOne, BTwo);
 
     // turn that object into an evaluation counter
-    eoEvalFuncCounter<PhotoAlbum>* eval = new eoEvalFuncCounter<PhotoAlbum> (* plainEval);
+    eoEvalFuncCounter<PhotoAlbum>* eval = new eoEvalFuncCounter<PhotoAlbum> (*plainEval);
 
     // store in state
     _state.storeFunctor(eval);

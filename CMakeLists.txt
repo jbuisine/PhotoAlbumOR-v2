@@ -16,7 +16,7 @@ enable_language(CXX)
 enable_language(C)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/module")
-find_package(Paradiseo COMPONENTS moeo eoutils eo)
+find_package(Paradiseo COMPONENTS smp moeo eoutils eo)
 
 include_directories(${PARADISEO_INCLUDE_DIR})
 
