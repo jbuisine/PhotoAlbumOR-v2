@@ -12,21 +12,14 @@ class PhotoAlbumEval : public moEval {
 public:
 
     // constructor
-    PhotoAlbumEval(unsigned int _n) : moEval(_n) {
-
-        // getting context files
-        std::string dataFileName = "../../../application/resources/photo-album/templates/FirstTemplate/info-photo.json";
-
-        std::string dispositionFileName = "../../../application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json";
-
-        // reading of the parameters contained in the data and disposition files
-        PhotoAlbumParser fParser(dataFileName, dispositionFileName);
+    PhotoAlbumEval(PhotoAlbumParser _parser){
 
         // getting data
-        n = fParser.getN();
-        A = fParser.getA();
-        BOne = fParser.getBOne();
-        BTwo = fParser.getBTwo();
+        A = _parser.getA();
+        BOne = _parser.getBOne();
+        BTwo = _parser.getBTwo();
+        n = _parser.getN();
+        moEval(n);
     }
 
     // evaluation function

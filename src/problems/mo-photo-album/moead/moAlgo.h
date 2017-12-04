@@ -6,8 +6,8 @@
 #include <vector>
 #include <fstream>
 #include "moSolution.h"
-#include "problems/mo-photo-album/moead/utils/moEval.h"
-#include "problems/mo-photo-album/moead/utils/subProblems.h"
+#include "moPhotoAlbumEval.h"
+#include "subProblems.h"
 #include "init.h"
 #include "repair.h"
 #include "mutation.h"
@@ -28,8 +28,8 @@ public:
  **/
 class MOEAD2 : public MultiObjectiveAlgo {
 public:
-  MOEAD2(moEval & _eval, SubProblems & _subproblems, Init & _init, Mutation & _mutation, OverlapRepair _repair, unsigned _mu, unsigned _duration)
-  : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutation(_mutation), repair(_repair), mu(_mu), duration(_duration) {
+  MOEAD2(moEval & _eval, SubProblems & _subproblems, InitPhotoAlbum & _init, std::vector<Mutation> & _mutations, unsigned _mu, unsigned _duration)
+  : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), mu(_mu), duration(_duration) {
   }
 
   virtual void run(char * fileout) {
@@ -43,14 +43,12 @@ public:
     // output file header
     FILE * file = fopen(fileout, "w");
     fprintf(file, "ID fitness obj1 obj2 ");
-    fprintf(file, "par1 par2 par3 par4 par5 par6 par7 par8 par9 par10 par11 par12 par13 par14 par15 par16 par17 par18 par19 par20 par21 par22 par23 ");
-    fprintf(file, "dir from best\n" );
     
     // initialization of the population
     pop.resize(mu);
     for(unsigned i = 0; i < mu; i++) {
       initialization(pop[i]);
-      repair(pop[i]);
+      //repair(pop[i]);
       evaluation(pop[i]);
       pop[i].fitness(subProblems.scalarfunc(i, pop[i]));
       sHM.insertSol(pop[i]);
@@ -72,7 +70,7 @@ public:
       mutant.best(0); 
       while(!sHM.isNewSol(mutant)) {
         mutation(mutant);
-        repair(mutant);
+        //repair(mutant);
       }
       sHM.insertSol(mutant);
       evaluation(mutant);
@@ -96,19 +94,18 @@ public:
       i++;
       if (i >= mu) i = 0;
     }
-
   }
 
 protected:
   moEval & evaluation;
   SubProblems & subProblems;
-  Init & initialization;
-  Mutation & mutation;
-  OverlapRepair repair;
+  InitPhotoAlbum & initialization;
+  std::vector<Mutation> & mutations;
+  //OverlapRepair repair;
   unsigned mu;
 
   // number of seconds of the run
-  time_t finishtime; 
+  time_t finishtime;
   unsigned duration;
 
 }; // end MOEAD2

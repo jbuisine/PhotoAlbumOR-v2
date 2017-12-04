@@ -12,17 +12,17 @@ public:
   virtual double scalarfunc(unsigned id, moSolution& _solution) = 0;
 
   virtual vector<unsigned>& neighborProblems(unsigned id) = 0;
-
-  // TODO set sliding window for each sub problem (OP ID, FIR value)
-  std::vector<std::pair<int, double>> slidingWindow;
 };
 
 
 class BiObjectiveSubProblems : public SubProblems {
 public:
-  BiObjectiveSubProblems(unsigned _mu, BiScalarFunc & _scalarfunc, double _ref1, double _ref2, unsigned _T) : mu(_mu), scalarfunction(_scalarfunc), T(_T) {
+  BiObjectiveSubProblems(unsigned _mu, BiScalarFunc & _scalarfunc, double _ref1, double _ref2, unsigned _T, unsigned _W) : mu(_mu), scalarfunction(_scalarfunc), T(_T) {
     referencePoint = std::make_pair(_ref1, _ref2);
     setNeighbors();
+
+    // set sliding box size
+    slidingWindow = new std::vector<std::pair<int, double>>(_W);
   }
 
   virtual double scalarfunc(unsigned id, moSolution& _solution) {
@@ -89,11 +89,14 @@ public:
   std::pair<double, double> referencePoint;
   // weights used by the scalar function
   vector< std::pair<double,double> > weights;
+
+  // TODO set sliding window for each sub problem (OP ID, FIR value)
+  std::vector<std::pair<int, double>>* slidingWindow;
 };
 
 class WeightedSumSubProblems : public BiObjectiveSubProblems {
 public:
-  WeightedSumSubProblems(unsigned _mu, double _ref1, double _ref2, unsigned _T) : BiObjectiveSubProblems(_mu, wsf, _ref1, _ref2, _T)
+  WeightedSumSubProblems(unsigned _mu, double _ref1, double _ref2, unsigned _T, unsigned _W) : BiObjectiveSubProblems(_mu, wsf, _ref1, _ref2, _T, _W)
   {
     setWeights();
   }
@@ -114,7 +117,7 @@ protected:
 
 class TchebychevSubProblems : public BiObjectiveSubProblems {
 public:
-  TchebychevSubProblems(unsigned _mu, double _ref1, double _ref2, unsigned _T) : BiObjectiveSubProblems(_mu, tf, _ref1, _ref2, _T)
+  TchebychevSubProblems(unsigned _mu, double _ref1, double _ref2, unsigned _T, unsigned _W) : BiObjectiveSubProblems(_mu, tf, _ref1, _ref2, _T, _W)
   {
     setWeights();
   }
