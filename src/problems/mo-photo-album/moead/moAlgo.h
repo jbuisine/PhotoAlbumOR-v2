@@ -9,9 +9,9 @@
 #include "moPhotoAlbumEval.h"
 #include "subProblems.h"
 #include "init.h"
-#include "repair.h"
+//#include "repair.h"
 #include "mutation.h"
-#include "checkSol.h"
+//#include "checkSol.h"
 
 using namespace std;
 
@@ -28,8 +28,14 @@ public:
  **/
 class MOEAD2 : public MultiObjectiveAlgo {
 public:
-  MOEAD2(moEval & _eval, SubProblems & _subproblems, InitPhotoAlbum & _init, std::vector<Mutation> & _mutations, unsigned _mu, unsigned _duration)
-  : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), mu(_mu), duration(_duration) {
+  MOEAD2(moEval & _eval, SubProblems & _subproblems, InitPhotoAlbum & _init, std::vector<Mutation> & _mutations, unsigned _mu, double _C, double _D, unsigned _duration)
+  : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), mu(_mu), C(_C), D(_D), duration(_duration) {
+    for(int i = 0; i < mu; i++){
+      checkUnusedOp.at(i) = true;
+      for(int j = 0; j < mutations.size(); j++){
+        unusedOp.at(i).at(j) = true;
+      }
+    }
   }
 
   virtual void run(char * fileout) {
@@ -42,7 +48,6 @@ public:
     
     // output file header
     FILE * file = fopen(fileout, "w");
-    fprintf(file, "ID fitness obj1 obj2 ");
     
     // initialization of the population
     pop.resize(mu);
@@ -66,12 +71,18 @@ public:
     unsigned i = 0;
     while (time(NULL) < finishtime) {
       // mutation of the direction i
+
+      // get best next op for subproblem
+      int selectedOpIndex = getBestOp(i);
+      Mutation mutation = mutations.at(selectedOpIndex);
+
       mutant = pop[i];        
       mutant.best(0); 
       while(!sHM.isNewSol(mutant)) {
         mutation(mutant);
         //repair(mutant);
       }
+
       sHM.insertSol(mutant);
       evaluation(mutant);
       nbEval++;
@@ -79,14 +90,25 @@ public:
 
       double fit;
       vector<unsigned> neighbors = subProblems.neighborProblems(i);
+
+      FIRop = 0.;
       for(unsigned n : neighbors) {
 	    fit = subProblems.scalarfunc(n, mutant);
 	      if (fit <= pop[ n ].fitness()) { // minimization problem
 	        pop[ n ] = mutant;
 	        pop[ n ].fitness(fit);	      
             mutant.best(1);
+
+            // getting FIR op for each neighbor
+            FIRop += computeFIR(pop[n], mutant);
 	      }
       }
+
+      // set new FIR value into sliding window
+      // TODO check if sliding window is full and then remove first element
+      subProblems.slidingWindows.at(i)->push_back(std::make_pair(selectedOpIndex, FIRop));
+
+      updateCreditAssignmentSubProblem(i);
 
       mutant.save(file);
       
@@ -104,10 +126,161 @@ protected:
   //OverlapRepair repair;
   unsigned mu;
 
+  /**
+   * Adaptive Operator Selection variables
+   */
+  // FRR values for each sub problem operators
+  std::vector<std::vector<std::pair<int, double>>> FFRs;
+  // nop : number of op present into each slidingWindows
+  std::vector<std::vector<int>> nop;
+  // non selected op subproblem
+  std::vector<std::vector<bool>> unusedOp;
+  // value which will specify if necessary to check unused op
+  std::vector<bool> checkUnusedOp;
+  // C : UCB scaling factor which control the trade-off EvE
+  double C;
+  // D decaying factor D in [0,1]
+  double D;
+
   // number of seconds of the run
   time_t finishtime;
   unsigned duration;
 
+private:
+
+
+  /**
+   * FIR compute value
+   *
+   * @param solution
+   * @param mutant
+   * @return
+   */
+  double computeFIR(moSolution& solution, moSolution& mutant){
+    return (solution.fitness() - mutant.fitness()) / solution.fitness();
+  }
+
+  /**
+   * Credit assignment updates of a subProblem
+   *
+   * @param _subProblem
+   */
+  void updateCreditAssignmentSubProblem(unsigned _subProblem){
+
+    // Init vector rewards and op values
+    std::vector<double> rewards(mutations.size());
+
+    for(int i = 0; i < rewards.size(); i++) {
+      rewards.at(i) = 0.;
+      nop.at(_subProblem).at(i) = 0;
+    };
+
+    // For each elements into slidingWindow of subProblem
+    for(int i = 0; i < subProblems.slidingWindows->at(_subProblem).size(); i++){
+
+      unsigned op = subProblems.slidingWindows->at(_subProblem).at(i).first;
+      double FIR = subProblems.slidingWindows->at(_subProblem).at(i).second;
+
+      // update reward
+      rewards.at(op) = rewards.at(op) + FIR;
+      nop.at(_subProblem).at(op)++;
+    }
+
+    // getting rank of each reward of operator
+    vector<int> opRanks(mutations.size());
+    vector<double> sortedRewards = rewards;
+
+    std::sort(sortedRewards.begin(), sortedRewards.end());
+
+    map<double, int> mapValues(mutations.size());
+
+    for (int i = 0; i < sortedRewards.size() ; i++)
+    {
+      // descending order
+      mapValues.insert(make_pair(sortedRewards[sortedRewards.size() - i - 1],i));
+    }
+
+    for (int i = 0; i < sortedRewards.size() ; i++)
+    {
+      // retrieve rank of op
+      opRanks.at(i) = mapValues.find(sortedRewards[i]);;
+    }
+
+    // Compute decay values of each op and decaySum
+    std::vector<double> decays(mutations.size());
+    double decaySum = 0.;
+
+    for(int op = 0; op < mutations.size(); op++){
+      decays.at(op) = pow(D, opRanks.at(op)) * rewards.at(op);
+      decaySum += decays.at(op);
+    }
+
+    // Compute new
+    for(int op = 0; op < mutations.size(); op++){
+      FFRs.at(_subProblem).at(op).second = decays.at(op)/decaySum;
+    }
+  }
+
+  /**
+   * Return best next op for subProblem
+   *
+   * @param _subProblem
+   * @return
+   */
+  unsigned getBestOp(unsigned _subProblem){
+
+    int selectedOp;
+
+    if(checkUnusedOp(_subProblem)){
+
+      std::vector<int> unusedOpIndexes;
+
+      for(int i = 0; i < unusedOp.at(_subProblem).size(); i++){
+        if(unusedOp.at(_subProblem).at(i)){
+          unusedOpIndexes.push_back(i);
+        }
+      }
+
+      // all op will be used at least once after this iteration
+      if(unusedOpIndexes.size() <= 1)
+        checkUnusedOp.at(_subProblem) = false;
+
+      int randIndex = rand() % unusedOpIndexes.size();
+
+      // getting next op choose randomly
+      selectedOp = unusedOpIndexes.at(randIndex);
+
+      // set op as viewed
+      unusedOp.at(_subProblem).at(selectedOp) = false;
+
+    }else{
+
+      // Use UCB to best next op
+      double maxValue = 0.;
+
+      auto fitnessRateRanks = subProblems.slidingWindows->at(_subProblem);
+
+      int nopSum = 0;
+
+      for (int i = 0; i < nop.at(_subProblem).size(); ++i) {
+        nopSum += nop.at(_subProblem).at(i);
+      }
+
+      // search best op at time t for subProblem
+      for(int i = 0; i < fitnessRateRanks.size(); i++){
+
+        double explorationValue = sqrt((2*log(nop))/nop.at(_subProblem).at(i));
+        double currentValue = (fitnessRateRanks.at(i) + (C * explorationValue));
+
+        if(currentValue > maxValue){
+          maxValue = currentValue;
+          selectedOp = i;
+        }
+      }
+
+    }
+    return selectedOp;
+  }
 }; // end MOEAD2
 
 #endif

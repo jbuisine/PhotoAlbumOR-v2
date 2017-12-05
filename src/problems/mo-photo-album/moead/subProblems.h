@@ -9,9 +9,13 @@
 
 class SubProblems {
 public:
-  virtual double scalarfunc(unsigned id, moSolution& _solution) = 0;
+    virtual double scalarfunc(unsigned id, moSolution& _solution) = 0;
 
-  virtual vector<unsigned>& neighborProblems(unsigned id) = 0;
+    virtual vector<unsigned>& neighborProblems(unsigned id) = 0;
+
+    // TODO set sliding window for each sub problem (Sub Problem ID (OP ID, FIR value))
+    // Each sub problem has its own sliding window
+    std::vector<std::vector<std::pair<int, double>>>* slidingWindows;
 };
 
 
@@ -21,8 +25,9 @@ public:
     referencePoint = std::make_pair(_ref1, _ref2);
     setNeighbors();
 
-    // set sliding box size
-    slidingWindow = new std::vector<std::pair<int, double>>(_W);
+    // set sliding windows
+    for (unsigned int i = 0; i < mu; i++)
+        slidingWindows->at(i) = new std::vector<std::pair<int, double>>(_W);
   }
 
   virtual double scalarfunc(unsigned id, moSolution& _solution) {
@@ -48,15 +53,15 @@ public:
     neighbors.resize(mu);
     for(int dir = 0; dir < -dmin; dir++) {
       for(unsigned i = 0; i < T; i++)
-	neighbors[dir].push_back(i);
+	    neighbors[dir].push_back(i);
     }
     for(unsigned dir = -dmin; dir < mu - dmax; dir++) {
       for(unsigned i = dir + dmin; i <= dir + dmax; i++)
-	neighbors[dir].push_back(i);
+	    neighbors[dir].push_back(i);
     }
     for(unsigned dir = mu - dmax; dir < mu; dir++) {
       for(unsigned i = mu - T; i < mu; i++)
-	neighbors[dir].push_back(i);
+	    neighbors[dir].push_back(i);
     }
   }
 
@@ -89,9 +94,6 @@ public:
   std::pair<double, double> referencePoint;
   // weights used by the scalar function
   vector< std::pair<double,double> > weights;
-
-  // TODO set sliding window for each sub problem (OP ID, FIR value)
-  std::vector<std::pair<int, double>>* slidingWindow;
 };
 
 class WeightedSumSubProblems : public BiObjectiveSubProblems {

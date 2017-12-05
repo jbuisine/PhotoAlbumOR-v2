@@ -29,8 +29,10 @@ using namespace std;
  * argv[4] : mu
  * argv[5] : T
  * argv[6] : W (sliding window size)
- * argv[7] : time in second of the run
- * argv[8] : output file name
+ * argv[7] : C (UCB scaling trade-off factor EvE)
+ * argv[8] : D (decaying factor in [0,1])
+ * argv[9] : time in second of the run
+ * argv[10] : output file name
  *
  ***/
 int main(int argc, char ** argv) {
@@ -48,7 +50,9 @@ int main(int argc, char ** argv) {
     unsigned mu = atoi(argv[4]);
     unsigned T = atoi(argv[5]);
     unsigned W = atoi(argv[6]);
-    unsigned duration = atoi(argv[7]);
+    double C = atoi(argv[7]);
+    double D = atoi(argv[8]);
+    unsigned duration = atoi(argv[9]);
 
 
     // init all context info
@@ -80,8 +84,8 @@ int main(int argc, char ** argv) {
     sp.print();
 
     cout << "----Starting moead----" << endl;
-    MOEAD2 algo(eval, sp, init, mutations, mu, duration);
-    algo.run(argv[8]);
+    MOEAD2 algo(eval, sp, init, mutations, mu, C, D, duration);
+    algo.run(argv[10]);
     fstream file("front_sq.dat", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++)
     file << algo.pop[i].toString() << endl;
