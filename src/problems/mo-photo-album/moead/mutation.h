@@ -29,7 +29,7 @@ protected:
 class StandardMutation : public Mutation {
 public:
   /**
-   * Contructor
+   * Constructor
    **/
   StandardMutation(int _size) : Mutation(_size) {}
 
@@ -56,7 +56,7 @@ class DoubleStandardMutation : public Mutation {
 public:
 
     /**
-     * Contructor
+     * Constructor
      **/
     DoubleStandardMutation(int _size) : Mutation(_size) {}
 

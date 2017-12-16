@@ -38,7 +38,12 @@ public:
     }
   }
 
-  virtual void run(char * fileout) {
+  /**
+   * Fitness
+   *
+   * @param fileout
+   */
+  virtual void runSimple(char * fileout) {
     // time duration of the run (in second)
     finishtime = time(NULL) + duration;        
 
@@ -72,7 +77,7 @@ public:
     while (time(NULL) < finishtime) {
       // mutation of the direction i
 
-      // get best next op for subproblem
+      // get best next op for sub problem
       int selectedOpIndex = getBestOp(i);
       Mutation mutation = mutations.at(selectedOpIndex);
 
@@ -80,6 +85,8 @@ public:
       mutant.best(0); 
       while(!sHM.isNewSol(mutant)) {
         mutation(mutant);
+
+        // TODO find repair function
         //repair(mutant);
       }
 
@@ -93,20 +100,22 @@ public:
 
       FIRop = 0.;
       for(unsigned n : neighbors) {
-	    fit = subProblems.scalarfunc(n, mutant);
-	      if (fit <= pop[ n ].fitness()) { // minimization problem
+
+        // getting fir value for this neighbor
+	    fir = computeFIR(pop[n], mutant, n);
+
+          if (fit <= pop[ n ].fitness()) { // minimization problem
 	        pop[ n ] = mutant;
 	        pop[ n ].fitness(fit);	      
             mutant.best(1);
 
             // getting FIR op for each neighbor
-            FIRop += computeFIR(pop[n], mutant);
+            FIRop += fir;
 	      }
       }
 
-      // set new FIR value into sliding window
-      // TODO check if sliding window is full and then remove first element
-      subProblems.slidingWindows.at(i)->push_back(std::make_pair(selectedOpIndex, FIRop));
+      // set new FIR value into sliding window of sub problem i
+      updateSlidingWindow(i, selectedOpIndex, FIRop);
 
       updateCreditAssignmentSubProblem(i);
 
@@ -133,7 +142,7 @@ protected:
   std::vector<std::vector<std::pair<int, double>>> FFRs;
   // nop : number of op present into each slidingWindows
   std::vector<std::vector<int>> nop;
-  // non selected op subproblem
+  // non selected op sub problem
   std::vector<std::vector<bool>> unusedOp;
   // value which will specify if necessary to check unused op
   std::vector<bool> checkUnusedOp;
@@ -148,6 +157,23 @@ protected:
 
 private:
 
+  /**
+   * Update sliding window content for the _subProblem
+   *
+   * @param _subProblem
+   * @param _selectedOpIndex
+   * @param _FIROp
+   */
+  void updateSlidingWindow(int _subProblem, int _selectedOpIndex, double _FIROp){
+
+      // add new element
+      subProblems.slidingWindows->at(_subProblem).push_back(std::make_pair(_selectedOpIndex, _FIRop));
+
+      // remove old element if necessary
+      if(subProblems.slidingWindows->at(_subProblem).size() > subProblems.getW()){
+          subProblems.slidingWindows->at(_subProblem).erase(subProblems.slidingWindows->at(_subProblem).begin());
+      }
+  }
 
   /**
    * FIR compute value
@@ -156,8 +182,8 @@ private:
    * @param mutant
    * @return
    */
-  double computeFIR(moSolution& solution, moSolution& mutant){
-    return (solution.fitness() - mutant.fitness()) / solution.fitness();
+  double computeFIR(moSolution& _solution, moSolution& _mutant, int _n){
+    return (subProblems.scalarfunc(_n, _solution) - subProblems.scalarfunc(_n, _mutant)) / subProblems.scalarfunc(_n, _solution);
   }
 
   /**
@@ -215,7 +241,7 @@ private:
       decaySum += decays.at(op);
     }
 
-    // Compute new
+    // Compute new FFRs value
     for(int op = 0; op < mutations.size(); op++){
       FFRs.at(_subProblem).at(op).second = decays.at(op)/decaySum;
     }
