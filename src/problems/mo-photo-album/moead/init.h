@@ -12,7 +12,7 @@
 class InitPhotoAlbum {
 public:
     /**
-     * Contructor
+     * Constructor
      **/
     InitPhotoAlbum() {}
 

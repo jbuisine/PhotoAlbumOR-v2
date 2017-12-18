@@ -83,15 +83,15 @@ int main(int argc, char ** argv) {
 
     sp.print();
 
-    cout << "----Starting moead----" << endl;
-    MOEAD2 algo(eval, sp, init, mutations, mu, C, D, duration);
-    algo.run(argv[10]);
+    cout << "----Starting FFRMAB----" << endl;
+    FFRMAB algo(eval, sp, init, mutations, mu, C, D, duration);
+    algo.runFRRMAB(argv[10]);
     fstream file("front_sq.dat", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++)
     file << algo.pop[i].toString() << endl;
     file.close();
 
-    std::cout << "End of MOEAD (n. eval = " << algo.nbEval << ")" << std::endl;
+    std::cout << "End of FFRMAB (n. eval = " << algo.nbEval << ")" << std::endl;
   
     return 0;
 }
