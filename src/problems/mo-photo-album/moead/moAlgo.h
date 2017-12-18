@@ -9,7 +9,7 @@
 #include "moPhotoAlbumEval.h"
 #include "subProblems.h"
 #include "init.h"
-//#include "repair.h"
+#include "repair.h"
 #include "mutation.h"
 //#include "checkSol.h"
 
@@ -71,7 +71,7 @@ public:
         pop.resize(mu);
         for (unsigned i = 0; i < mu; i++) {
             initialization(pop[i]);
-            //repair(pop[i]);
+            repair(pop[i]);
             evaluation(pop[i]);
             pop[i].fitness(subProblems.scalarfunc(i, pop[i]));
             sHM.insertSol(pop[i]);
@@ -98,105 +98,7 @@ public:
             mutant.best(0);
             while (!sHM.isNewSol(mutant)) {
                 mutation(mutant);
-
-                // TODO create repair function
-                //repair(mutant);
-            }
-
-            sHM.insertSol(mutant);
-            evaluation(mutant);
-            nbEval++;
-            mutant.ID(nbEval);
-
-            double fitness;
-            vector<unsigned> neighbors = subProblems.neighborProblems(i);
-
-            FIRop = 0.;
-            for (unsigned n : neighbors) {
-
-                // getting fir value for this neighbor
-                fitness = subProblems.scalarfunc(n, mutant);
-                fir = computeFIR(pop[n], fitness, n);
-
-                // if fir is better than 0 (we have amelioration)
-                if (fir > 0) {
-                    // replace solution
-                    pop[n] = mutant;
-
-                    // set new fitness value
-                    pop[n].fitness(fitness);
-
-                    mutant.best(1);
-
-                    // set new FIR op used
-                    FIRop += fir;
-                }
-            }
-
-            // set new FIR value into sliding window of sub problem i
-            updateSlidingWindow(i, selectedOpIndex, FIRop);
-
-            // update credit assignment value of sub problem i
-            updateCreditAssignmentSubProblem(i);
-
-            mutant.save(file);
-
-            // next direction
-            i++;
-            if (i >= mu) i = 0;
-        }
-    }
-
-    /**
-    * FFRMABN implementation : version which take consideration of neighborhood
-    *
-    * @param fileout
-    */
-    virtual void runFRRMAB_N(char *fileout) {
-        // time duration of the run (in second)
-        finishtime = time(NULL) + duration;
-
-        simpleHashMap sHM;
-
-        nbEval = 0;
-
-        // output file header
-        FILE *file = fopen(fileout, "w");
-
-        // initialization of the population
-        pop.resize(mu);
-        for (unsigned i = 0; i < mu; i++) {
-            initialization(pop[i]);
-            //repair(pop[i]);
-            evaluation(pop[i]);
-            pop[i].fitness(subProblems.scalarfunc(i, pop[i]));
-            sHM.insertSol(pop[i]);
-            nbEval++;
-            pop[i].ID(nbEval);
-            pop[i].dir(i);
-            pop[i].from(-1);
-            pop[i].best(1);
-            pop[i].save(file);
-        }
-
-        moSolution mutant;
-
-        // stopping criterium is the number of seconds
-        unsigned i = 0;
-        while (time(NULL) < finishtime) {
-            // mutation of the direction i
-
-            // get best next op for sub problem
-            int selectedOpIndex = getBestOp(i);
-            Mutation mutation = mutations.at(selectedOpIndex);
-
-            mutant = pop[i];
-            mutant.best(0);
-            while (!sHM.isNewSol(mutant)) {
-                mutation(mutant);
-
-                // TODO create repair function
-                //repair(mutant);
+                repair(mutant);
             }
 
             sHM.insertSol(mutant);
@@ -601,7 +503,7 @@ private:
 
             auto fitnessRateRanks = FFRs.at(subProblemSelected);
 
-            for (int i = 0; i < nop.at(_subProblem).size(); ++i) {
+            for (int i = 0; i < nop.at(_subProblem).size(); i++) {
                 nopSum += nop.at(subProblemSelected).at(i);
             }
 
