@@ -33,13 +33,12 @@ public:
      */
     void operator()(PhotoAlbum & _photoAlbum)
     {
-        if (_photoAlbum.invalidObjectiveVector())
-        {
-            PhotoAlbumObjectiveVector objVector;
-            objVector[0] = similitudeObj1(_photoAlbum);
-            objVector[1] = similitudeObj2(_photoAlbum);
-            _photoAlbum.objectiveVector(objVector);
-        }
+        _photoAlbum.objectiveVector().resize(2);
+
+        PhotoAlbumObjectiveVector objVector;
+        objVector[0] = similitudeObj1(_photoAlbum);
+        objVector[1] = similitudeObj2(_photoAlbum);
+        _photoAlbum.objectiveVector(objVector);
     };
 
 

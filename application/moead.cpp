@@ -50,9 +50,11 @@ int main(int argc, char ** argv) {
     unsigned mu = atoi(argv[4]);
     unsigned T = atoi(argv[5]);
     unsigned W = atoi(argv[6]);
-    double C = atoi(argv[7]);
-    double D = atoi(argv[8]);
-    unsigned duration = atoi(argv[9]);
+    double C = atof(argv[7]);
+    double D = atof(argv[8]);
+    unsigned neighborTaken = atoi(argv[9]);
+    double pFindNeighbor = atof(argv[10]);
+    unsigned duration = atoi(argv[11]);
 
 
     // init all context info
@@ -84,8 +86,8 @@ int main(int argc, char ** argv) {
     sp.print();
 
     cout << "----Starting FFRMAB----" << endl;
-    FFRMAB algo(eval, sp, init, mutations, mu, C, D, duration);
-    algo.runFRRMAB(argv[10]);
+    FFRMAB algo(eval, sp, init, mutations, mu, C, D, neighborTaken, pFindNeighbor, duration);
+    algo.runFRRMAB(argv[12]);
     fstream file("front_sq.dat", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++)
     file << algo.pop[i].toString() << endl;
