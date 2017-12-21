@@ -314,7 +314,7 @@ private:
             // sum of number operator (sliding window size)
             int nopSum = 0;
 
-            // check probability acceptance
+            // check neighborhood acceptance
             if (p < pFindNeighbor) {
 
                 // getting all neighbors
@@ -347,7 +347,7 @@ private:
                     }
                 }
 
-                // include current sub problem values
+                // include current sub problem values too
                 auto fitnessRateRanks = FFRs.at(_subProblem);
 
                 for (int j = 0; j < fitnessRateRanks.size(); j++) {
