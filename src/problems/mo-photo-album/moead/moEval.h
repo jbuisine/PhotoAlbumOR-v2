@@ -20,7 +20,7 @@ public:
    * 
    * default problem size is 0
    */
-  moEval() : _pbSize(0) { }
+  moEval() : _pbSize(0) { };
 
   // return the size of the problem
   unsigned int size() {

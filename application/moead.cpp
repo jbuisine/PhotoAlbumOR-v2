@@ -4,12 +4,11 @@
    Date: 2017/03/23
 
  **/
-//#define TRACE
 
 #include <iostream>
 #include <fstream>
 //#include "mpicxx.h"
-#include "mpi.h"
+//#include "mpi.h"
 
 using namespace std;
 
@@ -86,7 +85,7 @@ int main(int argc, char ** argv) {
     sp.print();
 
     cout << "----Starting FFRMAB----" << endl;
-    FFRMAB algo(eval, sp, init, mutations, mu, C, D, neighborTaken, pFindNeighbor, duration);
+    FFRMAB &algo(eval, sp, init, mutations, mu, C, D, neighborTaken, pFindNeighbor, duration);
     algo.runFRRMAB(argv[12]);
     fstream file("front_sq.dat", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++)

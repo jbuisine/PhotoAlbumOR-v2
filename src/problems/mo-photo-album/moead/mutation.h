@@ -11,7 +11,7 @@ public:
 
     Mutation(int _size) : size(_size) {};
 
-    virtual void operator()(Solution & _solution) = 0;
+    virtual void operator()(Solution & _solution){};
 
     int getSize() const {
         return size;
@@ -34,7 +34,7 @@ public:
   StandardMutation(int _size) : Mutation(_size) {}
 
   // mutation operator
-  void operator()(Solution & _solution) {
+  virtual void operator()(Solution & _solution) {
 
       int fstIndex = rand() % size;
       int sndIndex = rand() % size;
@@ -61,7 +61,7 @@ public:
     DoubleStandardMutation(int _size) : Mutation(_size) {}
 
     // mutation operator
-    void operator()(Solution & _solution) {
+    virtual void operator()(Solution & _solution) {
 
         int fstIndex = rand() % size;
         int sndIndex = rand() % size;

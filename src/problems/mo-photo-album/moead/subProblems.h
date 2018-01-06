@@ -17,7 +17,7 @@ public:
     // set sliding window for each sub problem (Sub Problem ID (OP ID, FIR value))
     std::vector<std::vector<std::pair<int, double>>>* slidingWindows;
 
-    virtual unsigned getW();
+    virtual unsigned getW() = 0;
 };
 
 
@@ -30,7 +30,7 @@ public:
 
     // set sliding windows
     for (unsigned int i = 0; i < mu; i++)
-        slidingWindows->at(i) = new std::vector<std::pair<int, double>>(W);
+        slidingWindows->at(i) = std::vector<std::pair<int, double>>(W);
   }
 
   virtual double scalarfunc(unsigned id, moSolution& _solution) {

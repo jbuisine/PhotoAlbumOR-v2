@@ -12,18 +12,18 @@ class PhotoAlbumEval : public moEval {
 public:
 
     // constructor
-    PhotoAlbumEval(PhotoAlbumParser _parser){
+    PhotoAlbumEval(PhotoAlbumParser _parser) : moEval() {
 
         // getting data
         A = _parser.getA();
         BOne = _parser.getBOne();
         BTwo = _parser.getBTwo();
-        n = _parser.getN();
-        moEval(n);
+        int n = _parser.getN();
+        this->_pbSize = n;
     }
 
     // evaluation function
-    void operator()(moSolution & _solution) {
+    virtual void operator()(moSolution & _solution) {
 
         _solution.objvec.resize(2);
 
@@ -32,9 +32,6 @@ public:
     }
 
 private:
-
-    // problem size
-    int n;
 
     // distance matrix A
     double ** A;
@@ -49,12 +46,12 @@ private:
      * computation of first objective
      * @param _photoAlbum the genotype to evaluate
      */
-    double similitudeObj1(const moSolution & _photoAlbum)
+    double similitudeObj1(moSolution & _photoAlbum)
     {
         double score = 0.;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
+        for (int i = 0; i < _pbSize; i++) {
+            for (int j = 0; j < _pbSize; j++) {
                 score += BOne[_photoAlbum[i]][_photoAlbum[j]] * A[i][j];
             }
         }
@@ -66,12 +63,12 @@ private:
      * computation of second objective
      * @param _photoAlbum the genotype to evaluate
      */
-    double similitudeObj2(const moSolution & _photoAlbum)
+    double similitudeObj2(moSolution & _photoAlbum)
     {
         double score = 0.;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
+        for (int i = 0; i < _pbSize; i++) {
+            for (int j = 0; j < _pbSize; j++) {
                 score += BTwo[_photoAlbum[i]][_photoAlbum[j]] * A[i][j];
             }
         }

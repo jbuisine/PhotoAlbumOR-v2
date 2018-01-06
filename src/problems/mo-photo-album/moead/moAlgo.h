@@ -3,6 +3,7 @@
 
 //#include "mpicxx.h"
 
+#include <map>
 #include <vector>
 #include <fstream>
 #include "moSolution.h"
@@ -25,13 +26,6 @@ public:
     * @param fileout
     */
     virtual void runFFRMAB(char * fileout) = 0;
-
-
-    /**
-    * FFRMABN implementation : version which take consideration of neighborhood
-    * @param fileout
-    */
-    virtual void runFFRMAB_N(char * fileout) = 0;
 };
 
 /**
@@ -52,7 +46,7 @@ public:
     }
 
     /**
-     * FRRMAB implementation
+     * FRRMAB with sliding window for each N sub problem implementation
      *
      * @param fileout
      */
@@ -60,7 +54,7 @@ public:
         // time duration of the run (in second)
         finishtime = time(NULL) + duration;
 
-        simpleHashMap sHM;
+        //simpleHashMap sHM;
 
         nbEval = 0;
 
@@ -74,7 +68,7 @@ public:
             //repair(pop[i]);
             evaluation(pop[i]);
             pop[i].fitness(subProblems.scalarfunc(i, pop[i]));
-            sHM.insertSol(pop[i]);
+            //sHM.insertSol(pop[i]);
             nbEval++;
             pop[i].ID(nbEval);
             pop[i].dir(i);
@@ -92,16 +86,17 @@ public:
 
             // get best next op for sub problem
             int selectedOpIndex = getBestOp(i);
-            Mutation mutation = mutations.at(selectedOpIndex);
+            Mutation& mutation = mutations.at(selectedOpIndex);
 
             mutant = pop[i];
             mutant.best(0);
-            while (!sHM.isNewSol(mutant)) {
+
+            //while (!sHM.isNewSol(mutant)) {
                 mutation(mutant);
                 //repair(mutant);
-            }
+            //}
 
-            sHM.insertSol(mutant);
+            //sHM.insertSol(mutant);
             evaluation(mutant);
             nbEval++;
             mutant.ID(nbEval);
@@ -109,12 +104,13 @@ public:
             double fitness;
             vector<unsigned> neighbors = subProblems.neighborProblems(i);
 
-            FIRop = 0.;
+            double FIRop = 0.;
+
             for (unsigned n : neighbors) {
 
                 // getting fir value for this neighbor
-                fitness = subProblems.scalarfunc(n, mutant);
-                fir = computeFIR(pop[n], fitness, n);
+                double fitness = subProblems.scalarfunc(n, mutant);
+                double fir = computeFIR(pop[n], fitness, n);
 
                 // if fir is better than 0 (we have amelioration)
                 if (fir > 0) {
@@ -190,7 +186,7 @@ private:
     void updateSlidingWindow(int _subProblem, int _selectedOpIndex, double _FIROp) {
 
         // add new element
-        subProblems.slidingWindows->at(_subProblem).push_back(std::make_pair(_selectedOpIndex, _FIRop));
+        subProblems.slidingWindows->at(_subProblem).push_back(std::make_pair(_selectedOpIndex, _FIROp));
 
         // remove old element if necessary
         if (subProblems.slidingWindows->at(_subProblem).size() > subProblems.getW()) {
@@ -236,12 +232,12 @@ private:
         }
 
         // getting rank of each reward of operator
-        vector<int> opRanks(mutations.size());
-        vector<double> sortedRewards = rewards;
+        std::vector<int> opRanks(mutations.size());
+        std::vector<double> sortedRewards = rewards;
 
         std::sort(sortedRewards.begin(), sortedRewards.end());
 
-        map<double, int> mapValues(mutations.size());
+        std::map<double, int> mapValues;
 
         for (int i = 0; i < sortedRewards.size(); i++) {
             // descending order
@@ -250,7 +246,8 @@ private:
 
         for (int i = 0; i < sortedRewards.size(); i++) {
             // retrieve rank of op
-            opRanks.at(i) = mapValues.find(sortedRewards[i]);;
+            // TODO to improve...
+            opRanks.at(i) = mapValues.at(sortedRewards.at(i));
         }
 
         // Compute decay values of each op and decaySum
@@ -281,7 +278,7 @@ private:
         int selectedOp;
 
         // check if all operator are used at least once
-        if (checkUnusedOp(_subProblem)) {
+        if (checkUnusedOp.at(_subProblem)) {
 
             std::vector<int> unusedOpIndexes;
 
@@ -318,11 +315,11 @@ private:
             if (p < pFindNeighbor) {
 
                 // getting all neighbors
-                vector<unsigned> neighbors = subProblems.neighborProblems(i);
+                std::vector<unsigned> neighbors = subProblems.neighborProblems(_subProblem);
 
                 // create new variables which will be used for compute new FFR values based on neighbor hood
-                vector<unsigned> nopNeighbor(neighbors.size());
-                vector<pair<int, double>> FFRNeighbor(neighbors.size());
+                std::vector<unsigned> nopNeighbor(neighbors.size());
+                std::vector<pair<int, double>> FFRNeighbor(neighbors.size());
 
                 // shuffle neighbors indexes to randomly choose them
                 std::random_shuffle(neighbors.begin(), neighbors.end());
@@ -330,7 +327,7 @@ private:
                 // init values
                 for (int i = 0; i < mutations.size(); i++) {
                     nopNeighbor.at(i) = 0;
-                    FFRNeighbor.at(i) = 0.;
+                    FFRNeighbor.at(i) = std::make_pair(i, 0.);
                 }
 
                 // set FFRs neighborhood values

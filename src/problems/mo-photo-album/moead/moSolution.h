@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "Solution.h"
 
 using namespace std;
 
@@ -16,14 +17,13 @@ using namespace std;
 */
 class moSolution : public Solution {
 public:
-  moSolution() : Solution() {
-  }
+  moSolution() : Solution() {}
 
   moSolution(const moSolution & _s) : Solution(_s) {
     objvec = _s.objvec;
   }
 
-  moSolution& operator=(const moSolution & _s) {
+  moSolution& operator=(moSolution & _s) {
     objvec = _s.objvec;
 
     this->resize(_s.size());
@@ -34,7 +34,7 @@ public:
     this->ID(_s.ID());
     this->dir(_s.dir());
     this->from(_s.from());
-    this->best(_s.best());  
+    this->best(_s.best());
 
     return *this;
   }

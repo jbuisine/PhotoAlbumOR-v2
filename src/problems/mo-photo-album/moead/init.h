@@ -23,7 +23,7 @@ public:
             _solution[i] = i;
         }
 
-        std::random_shuffle(_solution.begin(), _solution.end());
+        std::random_shuffle(&_solution[0], &_solution[_solution.size()-1]);
     }
 };
 
