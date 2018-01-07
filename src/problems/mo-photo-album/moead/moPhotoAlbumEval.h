@@ -18,8 +18,7 @@ public:
         A = _parser.getA();
         BOne = _parser.getBOne();
         BTwo = _parser.getBTwo();
-        int n = _parser.getN();
-        this->_pbSize = n;
+        pbSize = _parser.getN();
     }
 
     // evaluation function
@@ -50,8 +49,8 @@ private:
     {
         double score = 0.;
 
-        for (int i = 0; i < _pbSize; i++) {
-            for (int j = 0; j < _pbSize; j++) {
+        for (int i = 0; i < pbSize; i++) {
+            for (int j = 0; j < pbSize; j++) {
                 score += BOne[_photoAlbum[i]][_photoAlbum[j]] * A[i][j];
             }
         }
@@ -67,8 +66,8 @@ private:
     {
         double score = 0.;
 
-        for (int i = 0; i < _pbSize; i++) {
-            for (int j = 0; j < _pbSize; j++) {
+        for (int i = 0; i < pbSize; i++) {
+            for (int j = 0; j < pbSize; j++) {
                 score += BTwo[_photoAlbum[i]][_photoAlbum[j]] * A[i][j];
             }
         }

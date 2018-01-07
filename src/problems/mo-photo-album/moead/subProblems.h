@@ -15,7 +15,7 @@ public:
 
     // Each sub problem has its own sliding window
     // set sliding window for each sub problem (Sub Problem ID (OP ID, FIR value))
-    std::vector<std::vector<std::pair<int, double>>>* slidingWindows;
+    std::vector<std::vector<std::pair<int, double>>> slidingWindows;
 
     virtual unsigned getW() = 0;
 };
@@ -28,9 +28,8 @@ public:
     setNeighbors();
     W = _W;
 
-    // set sliding windows
-    for (unsigned int i = 0; i < mu; i++)
-        slidingWindows->at(i) = std::vector<std::pair<int, double>>(W);
+    // init sliding windows size
+    slidingWindows = std::vector<std::vector<std::pair<int, double>>>(_mu);
   }
 
   virtual double scalarfunc(unsigned id, moSolution& _solution) {

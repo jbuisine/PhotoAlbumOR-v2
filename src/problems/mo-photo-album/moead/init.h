@@ -19,6 +19,8 @@ public:
     // mutation operator
     void operator()(Solution & _solution) {
 
+        _solution.resize(_solution.size());
+
         for(int i = 0; i < _solution.size(); i++){
             _solution[i] = i;
         }
