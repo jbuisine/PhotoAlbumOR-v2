@@ -7,10 +7,9 @@
 #include <vector>
 #include <fstream>
 #include "moSolution.h"
-#include "problems/mo-photo-album/moead/moPhotoAlbumEval.h"
 #include "subProblems.h"
 #include "init.h"
-//#include "repair.h"
+#include "repair.h"
 #include "mutation.h"
 //#include "checkSol.h"
 
@@ -32,9 +31,9 @@ public:
  **/
 class FFRMAB : public MultiObjectiveAlgo {
 public:
-    FFRMAB(moEval &_eval, SubProblems &_subproblems, InitPhotoAlbum &_init, std::vector<Mutation> &_mutations,
+    FFRMAB(moEval &_eval, SubProblems &_subproblems, InitQAP &_init, std::vector<Mutation*> &_mutations, Repair &_repair,
            unsigned _mu, double _C, double _D, unsigned _neighborTaken, double _pFindNeighbor, unsigned _duration)
-            : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), mu(_mu),
+            : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), repair(_repair), mu(_mu),
               C(_C), D(_D), neighborTaken(_neighborTaken), pFindNeighbor(_pFindNeighbor), duration(_duration)  {
 
         // Initialization
@@ -111,15 +110,14 @@ public:
 
             // get best next op for sub problem
             int selectedOpIndex = getBestOp(i);
-            Mutation& mutation = mutations.at(selectedOpIndex);
+            Mutation& mutation = *mutations.at(selectedOpIndex);
 
             mutant = pop[i];
             mutant.best(0);
 
             //while (!sHM.isNewSol(mutant)) {
                 mutation(mutant);
-                mutation(mutant);
-                //repair(mutant);
+                //repair(mutant, i, true);
             //}
 
             //sHM.insertSol(mutant);
@@ -170,9 +168,9 @@ public:
 protected:
     moEval &evaluation;
     SubProblems &subProblems;
-    InitPhotoAlbum &initialization;
-    std::vector<Mutation> &mutations;
-    //OverlapRepair repair;
+    InitQAP &initialization;
+    std::vector<Mutation*> &mutations;
+    Repair &repair;
     unsigned mu;
 
 
@@ -228,7 +226,8 @@ private:
      * @return
      */
     double computeFIR(moSolution &_solution, double _mutantFitness, int _n) {
-        return (subProblems.scalarfunc(_n, _solution) - _mutantFitness) / subProblems.scalarfunc(_n, _solution);
+        double solFitness = subProblems.scalarfunc(_n, _solution);
+        return (solFitness - _mutantFitness) / solFitness;
     }
 
     /**
@@ -347,7 +346,7 @@ private:
                 std::vector<unsigned> neighbors = subProblems.neighborProblems(_subProblem);
 
                 // create new variables which will be used for compute new FFR values based on neighbor hood
-                std::vector<unsigned> nopNeighbor(neighbors.size());
+                std::vector<unsigned> nopNeighbor(mutations.size());
                 std::map<unsigned, double> FFRNeighbor;
 
                 // shuffle neighbors indexes to randomly choose them

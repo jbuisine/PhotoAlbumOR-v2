@@ -78,6 +78,8 @@ public:
         return dirInfo;
     }
 
+    virtual void print() = 0;
+
 protected:
     /**
      * Utils information about solution

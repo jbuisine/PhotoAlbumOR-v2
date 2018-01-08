@@ -2,21 +2,20 @@
 // Created by jbuisine on 04/12/17.
 //
 
-#ifndef PHOTOALBUM_INIT_H
-#define PHOTOALBUM_INIT_H
+#ifndef QAP_INIT_H
+#define QAP_INIT_H
 
 
 /*
  * Standard Mutation operator with fixed mutation rates
  */
-class InitPhotoAlbum {
+class InitQAP {
 public:
     /**
      * Constructor
      **/
-    InitPhotoAlbum() {}
+    InitQAP() {}
 
-    // mutation operator
     void operator()(Solution & _solution) {
 
         _solution.resize(_solution.size());
@@ -29,4 +28,4 @@ public:
     }
 };
 
-#endif //PHOTOALBUM_INIT_H
+#endif //QAP_INIT_H

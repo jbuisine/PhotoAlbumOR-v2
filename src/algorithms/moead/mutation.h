@@ -36,13 +36,18 @@ public:
   // mutation operator
   virtual void operator()(Solution & _solution) {
 
-      int fstIndex = rand() % size;
-      int sndIndex = rand() % size;
+      unsigned fstIndex;
+      unsigned sndIndex;
+
+      do{
+          fstIndex = rand() % size;
+          sndIndex = rand() % size;
+      }while (fstIndex == sndIndex);
 
       int tempValue = _solution[fstIndex];
 
       _solution[fstIndex] = _solution[sndIndex];
-      _solution[sndIndex] = _solution[fstIndex];
+      _solution[sndIndex] = tempValue;
 
       _solution.from(_solution.ID());
       _solution.best(0);
@@ -63,14 +68,61 @@ public:
     // mutation operator
     virtual void operator()(Solution & _solution) {
 
-        int fstIndex = rand() % size;
-        int sndIndex = rand() % size;
+        int fstIndex;
+        int sndIndex;
 
         for (int i = 0; i < 2; i++){
+
+            unsigned fstIndex;
+            unsigned sndIndex;
+
+            do{
+                fstIndex = rand() % size;
+                sndIndex = rand() % size;
+            }while (fstIndex == sndIndex);
+
             int tempValue = _solution[fstIndex];
 
             _solution[fstIndex] = _solution[sndIndex];
-            _solution[sndIndex] = _solution[fstIndex];
+            _solution[sndIndex] = tempValue;
+        }
+
+        _solution.from(_solution.ID());
+        _solution.best(0);
+    }
+};
+
+/*
+ * Triple Standard Mutation operator with fixed mutation rates
+ */
+class TripleStandardMutation : public Mutation {
+public:
+
+    /**
+     * Constructor
+     **/
+    TripleStandardMutation(int _size) : Mutation(_size) {}
+
+    // mutation operator
+    virtual void operator()(Solution & _solution) {
+
+        int fstIndex;
+        int sndIndex;
+
+        for (int i = 0; i < 3; i++){
+
+            unsigned fstIndex;
+            unsigned sndIndex;
+
+            do{
+                fstIndex = rand() % size;
+                sndIndex = rand() % size;
+            }while (fstIndex == sndIndex);
+
+            int tempValue = _solution[fstIndex];
+
+            _solution[fstIndex] = _solution[sndIndex];
+            _solution[sndIndex] = tempValue;
         }
 
         _solution.from(_solution.ID());

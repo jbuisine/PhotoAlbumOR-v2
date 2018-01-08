@@ -85,6 +85,10 @@ Example :
 python buildAlbum.py templates/FirstTemplate/ album-6-2per3.json chronologic-order.sol
 ```
 
+## MOEA/D
+
+For MOEA/D algorithm, QAP instances are generated following this available [generator](http://www.cs.bham.ac.uk/~jdk/mQAP/). 
+
 ## Licence
 
 [CeCILL](http://www.cecill.info/index.en.html)

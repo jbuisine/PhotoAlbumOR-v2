@@ -13,7 +13,7 @@
 using namespace std;
 
 #include <algorithms/moead/moSolution.h>
-#include <problems/mo-photo-album/moead/moPhotoAlbumEval.h>
+#include <problems/qap/moead/moQAPEval.h>
 #include <algorithms/moead/mutation.h>
 #include <algorithms/moead/subProblems.h>
 #include <algorithms/moead/moAlgo.h>
@@ -36,11 +36,8 @@ using namespace std;
  ***/
 int main(int argc, char ** argv) {
 
-
     // getting context files
-    std::string _dataFileName = "./../../application/resources/photo-album/templates/FirstTemplate/info-photo.json";
-
-    std::string _dispositionFileName = "./../../application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json";
+    std::string _dataFileName = "./../../application/resources/qap/instance20.txt";
 
     // Get all params data
     //std::string _dataFileName = argv[1];
@@ -64,16 +61,15 @@ int main(int argc, char ** argv) {
     double D = 0.6;
     unsigned neighborTaken = 2;
     double pFindNeighbor = 0.5;
-    unsigned duration = 100;
-
+    unsigned duration = 200;
 
     // init all context info
-    PhotoAlbumParser fparser(_dataFileName, _dispositionFileName);
+    QAPUniParser fparser(_dataFileName);
 
     int problem_size = fparser.getN();
 
     // Evaluation function
-    PhotoAlbumEval eval(fparser);
+    QAPEval eval(fparser);
 
     // random seed
     srand(seed);
@@ -83,9 +79,11 @@ int main(int argc, char ** argv) {
 
     StandardMutation mutation1(problem_size);
     DoubleStandardMutation mutation2(problem_size);
+    TripleStandardMutation mutation3(problem_size);
 
     mutations.push_back(&mutation1);
     mutations.push_back(&mutation2);
+    mutations.push_back(&mutation3);
     // End set Operators
 
     InitQAP init;

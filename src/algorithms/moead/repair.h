@@ -7,50 +7,82 @@
 
 #endif //PHOTOALBUM_REPAIR_H
 
+#include "subProblems.h"
+#include "mutation.h"
+#include "moEval.h"
 
-class HillClimber{
+
+class Repair{
+
+public:
+    Repair(unsigned _nbIteration, moEval &_evaluation, SubProblems &_subProblems, Mutation &_operator)
+            : subProblems(_subProblems), evaluation(_evaluation), mutation(_operator){
+        this->nbIteration = _nbIteration;
+    };
+
+    virtual void operator()(moSolution& _solution, unsigned _subProblem, bool _minimize) = 0;
+
+protected:
+
+    // number of iteration of local search
+    unsigned nbIteration;
+
+    SubProblems &subProblems;
+    Mutation &mutation;
+    moEval &evaluation;
+
+};
+
+class HillClimber : public Repair{
 
 public:
 
     /**
      * Constructor
      **/
-    HillClimber(unsigned _nbIteration, unsigned _problemSize) {
-        this->nbIteration = _nbIteration;
-        this->problemSize = _problemSize;
-    }
+    HillClimber(unsigned _nbIteration, moEval &_evaluation, SubProblems &_subProblems, Mutation &_operator)
+            : Repair(_nbIteration, _evaluation, _subProblems, _operator) {};
 
 
-    moSolution& operator()(moSolution& _solution){
+    virtual void operator()(moSolution& _solution, unsigned _subProblem, bool _minimize){
 
         unsigned iteration = 0;
-        double bestScore = _solution.fitness();
+        double bestFitness = _solution.fitness();
+        moSolution bestSolution = _solution;
 
+        unsigned size = _solution.size();
         while(iteration < nbIteration){
 
-            for(int i = 0; i < problemSize; i++){
+            moSolution currentSolution = bestSolution;
+            mutation(currentSolution);
 
-                int index = rand() % problemSize;
+            for(int i = 0; i < size; i++){
 
-                int tempValue = _solution[index];
+                moSolution mutant = currentSolution;
 
-                _solution[index] = _solution[i];
-                _solution[i] = _solution[tempValue];
+                mutation(mutant);
+                evaluation(mutant);
 
-                // TODO How to compute this fitness ?
-                double currentScore = _solution.fitness();
+                double fitness = subProblems.scalarfunc(_subProblem, mutant);
+
+                // choose kind of problem
+                if(_minimize){
+                    if(fitness < bestFitness){
+                        bestFitness = fitness;
+                        bestSolution = mutant;
+                    }
+                }else{
+                    if(fitness > bestFitness){
+                        bestFitness = fitness;
+                        bestSolution = mutant;
+                    }
+                }
 
                 iteration++;
             }
         }
+
+        // set best solution
+        _solution = bestSolution;
     }
-
-
-private:
-
-    // number of iteration of local search
-    unsigned nbIteration;
-
-    // problem size indication
-    unsigned problemSize;
 };
