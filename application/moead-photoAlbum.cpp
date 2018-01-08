@@ -12,12 +12,12 @@
 
 using namespace std;
 
-#include <problems/mo-photo-album/moead/moSolution.h>
+#include <algorithms/moead/moSolution.h>
 #include <problems/mo-photo-album/moead/moPhotoAlbumEval.h>
-#include <problems/mo-photo-album/moead/mutation.h>
-#include <problems/mo-photo-album/moead/subProblems.h>
-#include <problems/mo-photo-album/moead/moAlgo.h>
-#include <problems/mo-photo-album/moead/init.h>
+#include <algorithms/moead/mutation.h>
+#include <algorithms/moead/subProblems.h>
+#include <algorithms/moead/moAlgo.h>
+#include <algorithms/moead/init.h>
 
 /***
  * Main
@@ -55,15 +55,16 @@ int main(int argc, char ** argv) {
     //double pFindNeighbor = atof(argv[10]);
     //unsigned duration = atoi(argv[11]);
 
+    // default settings
     int seed = 10;
-    unsigned mu = 100;
-    unsigned T = 20;
+    unsigned mu = 10;
+    unsigned T = 2;
     unsigned W = 10;
     double C = 2.;
     double D = 0.6;
-    unsigned neighborTaken = 3;
+    unsigned neighborTaken = 2;
     double pFindNeighbor = 0.5;
-    unsigned duration = 50;
+    unsigned duration = 100;
 
 
     // init all context info

@@ -5,7 +5,7 @@
 #ifndef PHOTOALBUM_MOPHOTOALBUMEVAL_H_H
 #define PHOTOALBUM_MOPHOTOALBUMEVAL_H_H
 
-#include "moEval.h"
+#include "algorithms/moead/moEval.h"
 #include "PhotoAlbumParser.hpp"
 
 class PhotoAlbumEval : public moEval {

@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
         // breeder
         eoGeneralBreeder <PhotoAlbum> breed(select, op);
 
-        // algorithm
+        // algorithms
         moeoEasyEA <PhotoAlbum> algo (checkpoint, eval, breed, replace, fitnessAssignment, diversityAssignment);
 
 

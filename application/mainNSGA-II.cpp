@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         eoQuadCloneOp < PhotoAlbum > xover;
         eoUniformMutation < PhotoAlbum > mutation (M_EPSILON);
 
-        // algorithm
+        // algorithms
         moeoNSGAII <PhotoAlbum> nsgaII(MAX_GEN, eval, xover, P_CROSS, mutation, P_MUT);
 
         /*** Go ! ***/

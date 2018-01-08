@@ -7,7 +7,7 @@
 #include <vector>
 #include <fstream>
 #include "moSolution.h"
-#include "moPhotoAlbumEval.h"
+#include "problems/mo-photo-album/moead/moPhotoAlbumEval.h"
 #include "subProblems.h"
 #include "init.h"
 //#include "repair.h"
@@ -258,12 +258,12 @@ private:
         }
 
         // getting rank of each reward of operator
-        std::vector<int> opRanks(mutations.size());
+        std::vector<unsigned > opRanks(mutations.size());
         std::vector<double> sortedRewards = rewards;
 
         std::sort(sortedRewards.begin(), sortedRewards.end());
 
-        std::map<double, int> mapValues;
+        std::map<double, unsigned> mapValues;
 
         for (int i = 0; i < sortedRewards.size(); i++) {
             // descending order
@@ -286,7 +286,7 @@ private:
         }
 
         // Compute new FFRs value
-        for (int op = 0; op < mutations.size(); op++) {
+        for (unsigned op = 0; op < mutations.size(); op++) {
             if(decaySum != 0)
                 FFRs.at(_subProblem).at(op) = decays.at(op) / decaySum;
             else
@@ -311,7 +311,7 @@ private:
 
             std::vector<int> unusedOpIndexes;
 
-            for (int i = 0; i < unusedOp.at(_subProblem).size(); i++) {
+            for (unsigned i = 0; i < unusedOp.at(_subProblem).size(); i++) {
                 if (unusedOp.at(_subProblem).at(i)) {
                     unusedOpIndexes.push_back(i);
                 }
@@ -348,25 +348,25 @@ private:
 
                 // create new variables which will be used for compute new FFR values based on neighbor hood
                 std::vector<unsigned> nopNeighbor(neighbors.size());
-                std::map<int, double> FFRNeighbor;
+                std::map<unsigned, double> FFRNeighbor;
 
                 // shuffle neighbors indexes to randomly choose them
                 std::random_shuffle(neighbors.begin(), neighbors.end());
 
                 // init values
-                for (int i = 0; i < mutations.size(); i++) {
+                for (unsigned i = 0; i < mutations.size(); i++) {
                     nopNeighbor.at(i) = 0;
                     FFRNeighbor.insert(std::make_pair(i, 0.));
                 }
 
                 // set FFRs neighborhood values
-                for (int i = 0; i < neighborTaken; i++) {
+                for (unsigned i = 0; i < neighborTaken; i++) {
 
                     // getting FFRs values from neighbor sub problem i
                     auto fitnessRateRanks = FFRs.at(neighbors.at(i));
 
-                    for (int j = 0; j < fitnessRateRanks.size(); j++) {
-                        int index = j;
+                    for (unsigned j = 0; j < fitnessRateRanks.size(); j++) {
+                        unsigned index = j;
 
                         nopNeighbor.at(j)++;
                         FFRNeighbor.at(j) += fitnessRateRanks.at(j);
@@ -376,15 +376,15 @@ private:
                 // include current sub problem values too
                 auto fitnessRateRanks = FFRs.at(_subProblem);
 
-                for (int j = 0; j < fitnessRateRanks.size(); j++) {
-                    int index = j;
+                for (unsigned j = 0; j < fitnessRateRanks.size(); j++) {
+                    unsigned index = j;
 
                     nopNeighbor.at(index)++;
                     FFRNeighbor.at(index) += fitnessRateRanks.at(index);
                 }
 
                 // nopSum based on neighborhood and local sub problem information
-                for (int i = 0; i < nopNeighbor.size(); i++) {
+                for (unsigned i = 0; i < nopNeighbor.size(); i++) {
                     nopSum += nopNeighbor.at(i);
                 }
 
@@ -394,7 +394,7 @@ private:
 
                 // compute UCB neighbor hood and local information
                 // search best op at time t from neighborhood sub problem
-                for (int i = 0; i < FFRNeighbor.size(); i++) {
+                for (unsigned i = 0; i < FFRNeighbor.size(); i++) {
 
                     double explorationValue = sqrt((2 * log(nopSum)) / nopNeighbor.at(i));
                     double currentValue = (FFRNeighbor.at(i) + (C * explorationValue));
@@ -410,12 +410,12 @@ private:
                 // selected operator will based only on local information
                 auto fitnessRateRanks = FFRs.at(_subProblem);
 
-                for (int i = 0; i < nop.at(_subProblem).size(); ++i) {
+                for (unsigned i = 0; i < nop.at(_subProblem).size(); ++i) {
                     nopSum += nop.at(_subProblem).at(i);
                 }
 
                 // search best op at time t for subProblem
-                for (int i = 0; i < fitnessRateRanks.size(); i++) {
+                for (unsigned i = 0; i < fitnessRateRanks.size(); i++) {
 
                     double explorationValue = sqrt((2 * log(nopSum)) / nop.at(_subProblem).at(i));
                     double currentValue = fitnessRateRanks.at(i) + (C * explorationValue);
