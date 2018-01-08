@@ -12,18 +12,20 @@
 class InitPhotoAlbum {
 public:
     /**
-     * Contructor
+     * Constructor
      **/
     InitPhotoAlbum() {}
 
     // mutation operator
     void operator()(Solution & _solution) {
 
+        _solution.resize(_solution.size());
+
         for(int i = 0; i < _solution.size(); i++){
             _solution[i] = i;
         }
 
-        std::random_shuffle(_solution.begin(), _solution.end());
+        std::random_shuffle(&_solution[0], &_solution[_solution.size()-1]);
     }
 };
 

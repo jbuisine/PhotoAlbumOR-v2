@@ -4,12 +4,11 @@
    Date: 2017/03/23
 
  **/
-//#define TRACE
 
 #include <iostream>
 #include <fstream>
 //#include "mpicxx.h"
-#include "mpi.h"
+//#include "mpi.h"
 
 using namespace std;
 
@@ -39,20 +38,32 @@ int main(int argc, char ** argv) {
 
 
     // getting context files
-    //std::string dataFileName = "../../../application/resources/photo-album/templates/FirstTemplate/info-photo.json";
+    std::string _dataFileName = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/info-photo.json";
 
-    //std::string dispositionFileName = "../../../application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json";
+    std::string _dispositionFileName = "/home/jbuisine/Documents/Research/MetaheuristicsFramework/MH-ParadisEO/application/resources/photo-album/templates/FirstTemplate/album-6-2per3.json";
 
     // Get all params data
-    std::string _dataFileName = argv[1];
-    std::string _dispositionFileName = argv[1];
-    int seed = atoi(argv[3]);
-    unsigned mu = atoi(argv[4]);
-    unsigned T = atoi(argv[5]);
-    unsigned W = atoi(argv[6]);
-    double C = atoi(argv[7]);
-    double D = atoi(argv[8]);
-    unsigned duration = atoi(argv[9]);
+    //std::string _dataFileName = argv[1];
+    //std::string _dispositionFileName = argv[1];
+    //int seed = atoi(argv[3]);
+    //unsigned mu = atoi(argv[4]);
+    //unsigned T = atoi(argv[5]);
+    //unsigned W = atoi(argv[6]);
+    //double C = atof(argv[7]);
+    //double D = atof(argv[8]);
+    //unsigned neighborTaken = atoi(argv[9]);
+    //double pFindNeighbor = atof(argv[10]);
+    //unsigned duration = atoi(argv[11]);
+
+    int seed = 10;
+    unsigned mu = 100;
+    unsigned T = 20;
+    unsigned W = 10;
+    double C = 2.;
+    double D = 0.6;
+    unsigned neighborTaken = 3;
+    double pFindNeighbor = 0.5;
+    unsigned duration = 50;
 
 
     // init all context info
@@ -66,7 +77,7 @@ int main(int argc, char ** argv) {
     // random seed
     srand(seed);
 
-    // Operators
+    // Set Operators
     std::vector<Mutation> mutations;
 
     StandardMutation mutation1(problem_size);
@@ -74,24 +85,30 @@ int main(int argc, char ** argv) {
 
     mutations.push_back(mutation1);
     mutations.push_back(mutation2);
+    // End set Operators
 
     InitPhotoAlbum init;
 
-    //WeightedSumSubProblems sp(mu, 0.2, 0.2, T);
+    // init decomposition with Tchebychev mono objective function
     TchebychevSubProblems sp(mu, 0.0, 0.0, T, W);
-    //WeightedSumSubProblems sp(mu, 0.0, 0.0, T);
 
     sp.print();
 
-    cout << "----Starting moead----" << endl;
-    MOEAD2 algo(eval, sp, init, mutations, mu, C, D, duration);
-    algo.run(argv[10]);
-    fstream file("front_sq.dat", ios::out);
-    for(unsigned i = 0; i < algo.pop.size(); i++)
-    file << algo.pop[i].toString() << endl;
+    cout << "----Starting FFRMAB----" << endl;
+    FFRMAB algo(eval, sp, init, mutations, mu, C, D, neighborTaken, pFindNeighbor, duration);
+
+    char* fileout = "output.txt"; //argv[12]
+
+    algo.runFRRMAB(fileout);
+    ofstream file;
+    file.open ("front_pa.txt", ios::out);
+    for(unsigned i = 0; i < algo.pop.size(); i++){
+        file << algo.pop[i].toString() << endl;
+        std::cout << algo.pop[i].toString() << std::endl;
+    }
     file.close();
 
-    std::cout << "End of MOEAD (n. eval = " << algo.nbEval << ")" << std::endl;
+    std::cout << "End of FFRMAB (n. eval = " << algo.nbEval << ")" << std::endl;
   
     return 0;
 }

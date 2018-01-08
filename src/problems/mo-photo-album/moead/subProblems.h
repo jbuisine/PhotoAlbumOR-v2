@@ -13,9 +13,11 @@ public:
 
     virtual vector<unsigned>& neighborProblems(unsigned id) = 0;
 
-    // TODO set sliding window for each sub problem (Sub Problem ID (OP ID, FIR value))
     // Each sub problem has its own sliding window
-    std::vector<std::vector<std::pair<int, double>>>* slidingWindows;
+    // set sliding window for each sub problem (Sub Problem ID (OP ID, FIR value))
+    std::vector<std::vector<std::pair<int, double>>> slidingWindows;
+
+    virtual unsigned getW() = 0;
 };
 
 
@@ -24,10 +26,10 @@ public:
   BiObjectiveSubProblems(unsigned _mu, BiScalarFunc & _scalarfunc, double _ref1, double _ref2, unsigned _T, unsigned _W) : mu(_mu), scalarfunction(_scalarfunc), T(_T) {
     referencePoint = std::make_pair(_ref1, _ref2);
     setNeighbors();
+    W = _W;
 
-    // set sliding windows
-    for (unsigned int i = 0; i < mu; i++)
-        slidingWindows->at(i) = new std::vector<std::pair<int, double>>(_W);
+    // init sliding windows size
+    slidingWindows = std::vector<std::vector<std::pair<int, double>>>(_mu);
   }
 
   virtual double scalarfunc(unsigned id, moSolution& _solution) {
@@ -65,6 +67,11 @@ public:
     }
   }
 
+  // return sliding window size
+  unsigned getW(){
+      return W;
+  };
+
   virtual void setWeights() = 0;
 
   void print() {
@@ -88,6 +95,8 @@ public:
   BiScalarFunc & scalarfunction;
   // number of neighbors
   unsigned T;
+  // size of slidingWindows
+  unsigned W;
   // id of neighboring sub-problems
   vector< vector<unsigned> > neighbors;
   // reference point for the scalar function
@@ -125,17 +134,17 @@ public:
   }
 
   virtual void setWeights() {
-    double angle;
-    weights.resize(mu);
-    for(unsigned i = 0; i < mu; i++) {
-      angle = PI/2 * i / (mu - 1);
-      if (std::cos(angle) < 0.000000001)
-	weights[i] = std::make_pair(1000, 1);
-      else if (std::sin(angle) < 0.000000001)
-	weights[i] = std::make_pair(1, 1000);
-      else
-	weights[i] = std::make_pair(1 / std::cos(angle), 1 / std::sin(angle));
-    }
+      double angle;
+      weights.resize(mu);
+      for (unsigned i = 0; i < mu; i++) {
+          angle = PI / 2 * i / (mu - 1);
+          if (std::cos(angle) < 0.000000001)
+              weights[i] = std::make_pair(1000, 1);
+          else if (std::sin(angle) < 0.000000001)
+              weights[i] = std::make_pair(1, 1000);
+          else
+              weights[i] = std::make_pair(1 / std::cos(angle), 1 / std::sin(angle));
+      }
   }
 
 protected:
