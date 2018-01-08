@@ -63,7 +63,7 @@ int main(int argc, char ** argv) {
     double D = 0.6;
     unsigned neighborTaken = 3;
     double pFindNeighbor = 0.5;
-    unsigned duration = 100;
+    unsigned duration = 50;
 
 
     // init all context info
@@ -100,9 +100,12 @@ int main(int argc, char ** argv) {
     char* fileout = "output.txt"; //argv[12]
 
     algo.runFRRMAB(fileout);
-    fstream file("front_sq.dat", ios::out);
-    for(unsigned i = 0; i < algo.pop.size(); i++)
+    ofstream file;
+    file.open ("front_pa.txt", ios::out);
+    for(unsigned i = 0; i < algo.pop.size(); i++){
         file << algo.pop[i].toString() << endl;
+        std::cout << algo.pop[i].toString() << std::endl;
+    }
     file.close();
 
     std::cout << "End of FFRMAB (n. eval = " << algo.nbEval << ")" << std::endl;
