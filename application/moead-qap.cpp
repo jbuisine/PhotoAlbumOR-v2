@@ -37,7 +37,7 @@ using namespace std;
 int main(int argc, char ** argv) {
 
     // getting context files
-    std::string _dataFileName = "./../../application/resources/qap/instance20.txt";
+    std::string _dataFileName = "./../../application/resources/qap/instance100.txt";
 
     // Get all params data
     //std::string _dataFileName = argv[1];
@@ -54,14 +54,14 @@ int main(int argc, char ** argv) {
 
     // default settings
     int seed = 10;
-    unsigned mu = 10;
-    unsigned T = 2;
-    unsigned W = 10;
+    unsigned mu = 100;
+    unsigned T = 20;
+    unsigned W = 15;
     double C = 2.;
     double D = 0.6;
-    unsigned neighborTaken = 2;
+    unsigned neighborTaken = 10;
     double pFindNeighbor = 0.5;
-    unsigned duration = 200;
+    unsigned duration = 10;
 
     // init all context info
     QAPUniParser fparser(_dataFileName);
