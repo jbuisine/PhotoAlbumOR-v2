@@ -164,7 +164,7 @@ void main_function(int argc, char **argv)
 
     /* =========================================================
      *
-     * the local search algorithm
+     * the local search algorithms
      *
      * ========================================================= */
 

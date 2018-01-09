@@ -59,12 +59,15 @@ int main(int argc, char* argv[])
                                                                   false).value();
 
         // The fitness evaluation
-        eoEvalFuncCounter<PhotoAlbum>& eval = do_make_eval(parser, state, dataFileName, dispositionFileName);
+        eoEvalFuncCounter<PhotoAlbum> eval = do_make_eval(parser, state, dataFileName, dispositionFileName);
 
         /*** the representation-independent things ***/
 
         eoInitPermutation < PhotoAlbum > init(54);
         eoPop < PhotoAlbum > pop (POP_SIZE, init);
+
+        for(int i = 0; i < pop.size(); i++)
+            std::cout << pop.at(i) << std::endl;
 
         // definition of the archive
         moeoUnboundedArchive<PhotoAlbum> arch;
@@ -74,7 +77,7 @@ int main(int argc, char* argv[])
         eoQuadCloneOp < PhotoAlbum > xover;
         eoUniformMutation < PhotoAlbum > mutation (M_EPSILON);
 
-        // algorithm
+        // algorithms
         moeoNSGAII <PhotoAlbum> nsgaII(MAX_GEN, eval, xover, P_CROSS, mutation, P_MUT);
 
         /*** Go ! ***/

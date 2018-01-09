@@ -2,6 +2,8 @@
 include_directories(${PARADISEO_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-add_executable(moPhotoAlbum mainMOEA.cpp)
+add_executable(moPhotoAlbum moead-photoAlbum.cpp)
+add_executable(moQAP moead-qap.cpp)
+
 target_link_libraries(moPhotoAlbum ${PARADISEO_LIBRARIES})
 

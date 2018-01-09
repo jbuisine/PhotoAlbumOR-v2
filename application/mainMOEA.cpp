@@ -5,6 +5,9 @@
 // moeo general include
 #include <moeo>
 
+// definition of the representation
+#include <problems/mo-photo-album/PhotoAlbum.hpp>
+
 // for the creation of an evaluator
 #include <problems/mo-photo-album/make_eval_PhotoAlbum.h>
 
@@ -20,10 +23,6 @@
 
 // checks for help demand, and writes the status file and make_help; in libutils
 void make_help(eoParser & _parser);
-
-// definition of the representation
-#include <problems/mo-photo-album/PhotoAlbum.hpp>
-
 
 using namespace std;
 
@@ -94,7 +93,7 @@ int main(int argc, char* argv[])
         // breeder
         eoGeneralBreeder <PhotoAlbum> breed(select, op);
 
-        // algorithm
+        // algorithms
         moeoEasyEA <PhotoAlbum> algo (checkpoint, eval, breed, replace, fitnessAssignment, diversityAssignment);
 
 
