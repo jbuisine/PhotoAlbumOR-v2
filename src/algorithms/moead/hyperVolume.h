@@ -1,0 +1,8 @@
+//
+// Created by jbuisine on 11/01/18.
+//
+
+#ifndef PHOTOALBUM_HYPERVOLUME_H
+#define PHOTOALBUM_HYPERVOLUME_H
+
+#endif //PHOTOALBUM_HYPERVOLUME_H
