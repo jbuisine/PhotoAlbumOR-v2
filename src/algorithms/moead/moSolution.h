@@ -79,6 +79,12 @@ public:
     return ss.str();
   }
 
+  /**
+   * Operator which uses to sort object by specific objective
+   */
+  bool operator< (moSolution &other) {
+      return objvec[0] < other.objvec[0];
+  }
 
   //protected:
   // objective vector

@@ -6,65 +6,45 @@
 #include <map>
 #include <vector>
 #include <fstream>
-#include "moSolution.h"
-#include "subProblems.h"
-#include "init.h"
-#include "repair.h"
-#include "mutation.h"
+#include <algorithms/moead/moSolution.h>
+#include <algorithms/moead/subProblems.h>
+#include <algorithms/moead/init.h>
+#include <algorithms/moead/repair.h>
+#include <algorithms/moead/mutation.h>
+#include <algorithms/moead/moAlgo.h>
 //#include "checkSol.h"
 
-
-class MultiObjectiveAlgo {
-public:
-    std::vector<moSolution> pop ;
-    unsigned maxEval;
-    /**
-    * FFRMAB implementation
-    * @param fileout
-    */
-    virtual void runFRRMAB(char *fileout) = 0;
-};
-
 /**
-   Bi objective MOEA/D
+   FRRMAB algorithm proposed by "Adaptive Operator Selection With Bandits for a Multiobjective Evolutionary Algorithm Based on Decomposition" article
  **/
-class FFRMAB : public MultiObjectiveAlgo {
+class FRRMAB : public MultiObjectiveAlgo {
 public:
-    FFRMAB(moEval &_eval, SubProblems &_subproblems, InitQAP &_init, std::vector<Mutation*> &_mutations, Repair &_repair,
-           unsigned _mu, double _C, double _D, unsigned _neighborTaken, double _pFindNeighbor, unsigned _maxEval)
+    FRRMAB(moEval &_eval, SubProblems &_subproblems, InitQAP &_init, std::vector<Mutation*> &_mutations, Repair &_repair,
+           unsigned _mu, double _C, double _D, unsigned _maxEval)
             : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), repair(_repair), mu(_mu),
-              C(_C), D(_D), neighborTaken(_neighborTaken), pFindNeighbor(_pFindNeighbor), maxEval(_maxEval)  {
-
-        // Initialization
-        // FRR values for each sub problem operators
-        FFRs.resize(mu);
-        // nop : number of op present into each slidingWindows (sub problem)
-        nop.resize(mu);
-        // non selected op sub problem
-        unusedOp.resize(mu);
-        // value which will specify if necessary to check unused op
-        checkUnusedOp.resize(mu);
-        // resize pop to mu
-        pop.resize(mu);
+              C(_C), D(_D), maxEval(_maxEval)  {
 
         int nbOperators = mutations.size();
 
+        // Initialization
+        // nop : number of op present into each slidingWindow
+        nop.resize(nbOperators);
+        // non selected op
+        unusedOp.resize(nbOperators);
+        // resize pop to mu
+        pop.resize(mu);
+        // check if necessary to use an unused op
+        checkUnusedOp = true;
+
         for (int i = 0; i < mu; i++) {
-
             pop.at(i).resize(evaluation.size());
+        }
 
-            checkUnusedOp.at(i) = true;
+        for (int j = 0; j < nbOperators; j++) {
+            unusedOp.at(j) = true;
 
-            // init each sub vectors size
-            unusedOp.at(i).resize(nbOperators);
-            nop.at(i).resize(nbOperators);
-
-            for (int j = 0; j < nbOperators; j++) {
-                unusedOp.at(i).at(j) = true;
-
-                // init each pair(OpID, FFR value) of sub problem
-                FFRs.at(i).insert(std::make_pair(j, 0.));
-            }
+            // init each pair(OpID, FFR value) of sub problem
+            FFRs.insert(std::make_pair(j, 0.));
         }
     }
 
@@ -73,9 +53,10 @@ public:
      *
      * @param fileout
      */
-    virtual void runFRRMAB(char *fileout) {
+    virtual void run(char *fileout) {
         //simpleHashMap sHM;
         unsigned nbEval = 0;
+        time_t begintime = time(NULL);
 
         // output file header
         FILE *file = fopen(fileout, "w");
@@ -146,11 +127,11 @@ public:
                 }
             }
 
-            // set new FIR value into sliding window of sub problem i
-            updateSlidingWindow(i, selectedOpIndex, FIRop);
+            // set new FIR value into sliding window
+            updateSlidingWindow(selectedOpIndex, FIRop);
 
-            // update credit assignment value of sub problem i
-            updateCreditAssignmentSubProblem(i);
+            // update credit assignment values
+            updateCreditAssignmentSubProblem();
 
             mutant.save(file);
 
@@ -158,6 +139,9 @@ public:
             i++;
             if (i >= mu) i = 0;
         }
+
+        // set duration time
+        duration = time(NULL) - begintime;
     }
 
 protected:
@@ -168,27 +152,23 @@ protected:
     Repair &repair;
     unsigned mu;
 
-
     /**
     * Adaptive Operator Selection variables
     */
-    // FRR values for each sub problem operators
-    std::vector<std::map<int, double>> FFRs;
-    // nop : number of op present into each slidingWindows
-    std::vector<std::vector<int>> nop;
+    // FRR values
+    std::map<int, double> FFRs;
+    // nop : number of op present of slidingWindow
+    std::vector<int> nop;
     // non selected op sub problem
-    std::vector<std::vector<bool>> unusedOp;
+    std::vector<bool> unusedOp;
     // value which will specify if necessary to check unused op
-    std::vector<bool> checkUnusedOp;
+    bool checkUnusedOp;
+    // slidingWindow
+    std::vector<std::pair<int, double>> slidingWindow;
     // C : UCB scaling factor which control the trade-off EvE
     double C;
     // D decaying factor D in [0,1]
     double D;
-    // number of neighbor taken in consideration to choose best operator
-    unsigned neighborTaken;
-    // probability to search into neighbor hood information to choose best operator
-    double pFindNeighbor;
-
     // max evaluation of algo
     unsigned maxEval;
 
@@ -197,18 +177,17 @@ private:
     /**
      * Update sliding window content for the _subProblem
      *
-     * @param _subProblem
      * @param _selectedOpIndex
      * @param _FIROp
      */
-    void updateSlidingWindow(int _subProblem, int _selectedOpIndex, double _FIROp) {
+    void updateSlidingWindow(int _selectedOpIndex, double _FIROp) {
 
         // add new element
-        subProblems.slidingWindows.at(_subProblem).push_back(std::make_pair(_selectedOpIndex, _FIROp));
+        slidingWindow.push_back(std::make_pair(_selectedOpIndex, _FIROp));
 
         // remove old element if necessary
-        if (subProblems.slidingWindows.at(_subProblem).size() > subProblems.getW()) {
-            subProblems.slidingWindows.at(_subProblem).erase(subProblems.slidingWindows.at(_subProblem).begin());
+        if (slidingWindow.size() > subProblems.getW()) {
+            slidingWindow.erase(slidingWindow.begin());
         }
     }
 
@@ -225,49 +204,41 @@ private:
     }
 
     /**
-     * Credit assignment updates of a subProblem
-     *
-     * @param _subProblem
+     * Credit assignment updates
      */
-    void updateCreditAssignmentSubProblem(unsigned _subProblem) {
+    void updateCreditAssignmentSubProblem() {
 
         // Init vector rewards and op values
         std::vector<double> rewards(mutations.size());
 
         for (int i = 0; i < rewards.size(); i++) {
             rewards.at(i) = 0.;
-            nop.at(_subProblem).at(i) = 0;
+            nop.at(i) = 0;
         };
 
         // For each elements into slidingWindow of subProblem
-        for (int i = 0; i < subProblems.slidingWindows.at(_subProblem).size(); i++) {
+        for (int i = 0; i < slidingWindow.size(); i++) {
 
-            unsigned op = subProblems.slidingWindows.at(_subProblem).at(i).first;
-            double FIR = subProblems.slidingWindows.at(_subProblem).at(i).second;
+            unsigned op = slidingWindow.at(i).first;
+            double FIR = slidingWindow.at(i).second;
 
             // update reward
             rewards.at(op) += FIR;
-            nop.at(_subProblem).at(op)++;
+            nop.at(op)++;
         }
 
         // getting rank of each reward of operator
         std::vector<unsigned > opRanks(mutations.size());
-        std::vector<double> sortedRewards = rewards;
 
-        std::sort(sortedRewards.begin(), sortedRewards.end());
+        // set default indexes
+        std::size_t n(0);
+        std::generate(std::begin(opRanks), std::end(opRanks), [&]{ return n++; });
 
-        std::map<double, unsigned> mapValues;
+        // getting rank indexes sorted
+        std::sort(opRanks.begin(), opRanks.end(),
+                  [&](int i1, int i2) { return rewards[i1] < rewards[i2]; } );
 
-        for (int i = 0; i < sortedRewards.size(); i++) {
-            // descending order
-            mapValues.insert(make_pair(sortedRewards[sortedRewards.size() - i - 1], i));
-        }
-
-        for (int i = 0; i < sortedRewards.size(); i++) {
-            // retrieve rank of op
-            // TODO to improve... use std::sort
-            opRanks.at(i) = mapValues.at(sortedRewards.at(i));
-        }
+        std::reverse(opRanks.begin(), opRanks.end());
 
         // Compute decay values of each op and decaySum
         std::vector<double> decays(mutations.size());
@@ -281,9 +252,9 @@ private:
         // Compute new FFRs value
         for (unsigned op = 0; op < mutations.size(); op++) {
             if(decaySum != 0)
-                FFRs.at(_subProblem).at(op) = decays.at(op) / decaySum;
+                FFRs.at(op) = decays.at(op) / decaySum;
             else
-                FFRs.at(_subProblem).at(op) = 0.;
+                FFRs.at(op) = 0.;
         }
     }
 
@@ -300,19 +271,19 @@ private:
         int selectedOp;
 
         // check if all operator are used at least once
-        if (checkUnusedOp.at(_subProblem)) {
+        if (checkUnusedOp) {
 
             std::vector<int> unusedOpIndexes;
 
-            for (unsigned i = 0; i < unusedOp.at(_subProblem).size(); i++) {
-                if (unusedOp.at(_subProblem).at(i)) {
+            for (unsigned i = 0; i < unusedOp.size(); i++) {
+                if (unusedOp.at(i)) {
                     unusedOpIndexes.push_back(i);
                 }
             }
 
             // all op will be used at least once after this iteration
             if (unusedOpIndexes.size() <= 1)
-                checkUnusedOp.at(_subProblem) = false;
+                checkUnusedOp = false;
 
             int randIndex = rand() % unusedOpIndexes.size();
 
@@ -320,12 +291,9 @@ private:
             selectedOp = unusedOpIndexes.at(randIndex);
 
             // set op as viewed
-            unusedOp.at(_subProblem).at(selectedOp) = false;
+            unusedOp.at(selectedOp) = false;
 
         } else {
-
-            // probability to check neighborhood information
-            double p = ((double) rand() / (RAND_MAX));
 
             // Use UCB to best next op
             double maxValue = -1.;
@@ -333,90 +301,19 @@ private:
             // sum of number operator (sliding window size)
             int nopSum = 0;
 
-            // check neighborhood acceptance
-            if (p < pFindNeighbor) {
+            for (unsigned i = 0; i < nop.size(); ++i) {
+                nopSum += nop.at(i);
+            }
 
-                // getting all neighbors
-                std::vector<unsigned> neighbors = subProblems.neighborProblems(_subProblem);
+            // search best op at time t for subProblem
+            for (unsigned i = 0; i < FFRs.size(); i++) {
 
-                // create new variables which will be used for compute new FFR values based on neighbor hood
-                std::vector<unsigned> nopNeighbor(mutations.size());
-                std::map<unsigned, double> FFRNeighbor;
+                double explorationValue = sqrt((2 * log(nopSum)) / nop.at(i));
+                double currentValue = FFRs.at(i) + (C * explorationValue);
 
-                // shuffle neighbors indexes to randomly choose them
-                std::random_shuffle(neighbors.begin(), neighbors.end());
-
-                // init values
-                for (unsigned i = 0; i < mutations.size(); i++) {
-                    nopNeighbor.at(i) = 0;
-                    FFRNeighbor.insert(std::make_pair(i, 0.));
-                }
-
-                // set FFRs neighborhood values
-                for (unsigned i = 0; i < neighborTaken; i++) {
-
-                    // getting FFRs values from neighbor sub problem i
-                    auto fitnessRateRanks = FFRs.at(neighbors.at(i));
-
-                    for (unsigned j = 0; j < fitnessRateRanks.size(); j++) {
-                        unsigned index = j;
-
-                        nopNeighbor.at(j)++;
-                        FFRNeighbor.at(j) += fitnessRateRanks.at(j);
-                    }
-                }
-
-                // include current sub problem values too
-                auto fitnessRateRanks = FFRs.at(_subProblem);
-
-                for (unsigned j = 0; j < fitnessRateRanks.size(); j++) {
-                    unsigned index = j;
-
-                    nopNeighbor.at(index)++;
-                    FFRNeighbor.at(index) += fitnessRateRanks.at(index);
-                }
-
-                // nopSum based on neighborhood and local sub problem information
-                for (unsigned i = 0; i < nopNeighbor.size(); i++) {
-                    nopSum += nopNeighbor.at(i);
-                }
-
-                for (int i = 0; i < nop.at(_subProblem).size(); ++i) {
-                    nopSum += nop.at(_subProblem).at(i);
-                }
-
-                // compute UCB neighbor hood and local information
-                // search best op at time t from neighborhood sub problem
-                for (unsigned i = 0; i < FFRNeighbor.size(); i++) {
-
-                    double explorationValue = sqrt((2 * log(nopSum)) / nopNeighbor.at(i));
-                    double currentValue = (FFRNeighbor.at(i) + (C * explorationValue));
-
-                    if (currentValue > maxValue) {
-                        maxValue = currentValue;
-                        selectedOp = i;
-                    }
-                }
-
-            } else {
-
-                // selected operator will based only on local information
-                auto fitnessRateRanks = FFRs.at(_subProblem);
-
-                for (unsigned i = 0; i < nop.at(_subProblem).size(); ++i) {
-                    nopSum += nop.at(_subProblem).at(i);
-                }
-
-                // search best op at time t for subProblem
-                for (unsigned i = 0; i < fitnessRateRanks.size(); i++) {
-
-                    double explorationValue = sqrt((2 * log(nopSum)) / nop.at(_subProblem).at(i));
-                    double currentValue = fitnessRateRanks.at(i) + (C * explorationValue);
-
-                    if (currentValue > maxValue) {
-                        maxValue = currentValue;
-                        selectedOp = i;
-                    }
+                if (currentValue > maxValue) {
+                    maxValue = currentValue;
+                    selectedOp = i;
                 }
             }
         }

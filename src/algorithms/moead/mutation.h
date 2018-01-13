@@ -24,14 +24,14 @@ protected:
 
 
 /*
- * Standard Mutation operator with fixed mutation rates
+ * Standard random Mutation operator with fixed mutation rates
  */
-class StandardMutation : public Mutation {
+class StandardRndMutation : public Mutation {
 public:
   /**
    * Constructor
    **/
-  StandardMutation(int _size) : Mutation(_size) {}
+  StandardRndMutation(int _size) : Mutation(_size) {}
 
   // mutation operator
   virtual void operator()(Solution & _solution) {
@@ -57,19 +57,16 @@ public:
 /*
  * Double Standard Mutation operator with fixed mutation rates
  */
-class DoubleStandardMutation : public Mutation {
+class DoubleStandardRndMutation : public Mutation {
 public:
 
     /**
      * Constructor
      **/
-    DoubleStandardMutation(int _size) : Mutation(_size) {}
+    DoubleStandardRndMutation(int _size) : Mutation(_size) {}
 
     // mutation operator
     virtual void operator()(Solution & _solution) {
-
-        int fstIndex;
-        int sndIndex;
 
         for (int i = 0; i < 2; i++){
 
@@ -95,19 +92,16 @@ public:
 /*
  * Triple Standard Mutation operator with fixed mutation rates
  */
-class TripleStandardMutation : public Mutation {
+class TripleStandardRndMutation : public Mutation {
 public:
 
     /**
      * Constructor
      **/
-    TripleStandardMutation(int _size) : Mutation(_size) {}
+    TripleStandardRndMutation(int _size) : Mutation(_size) {}
 
     // mutation operator
     virtual void operator()(Solution & _solution) {
-
-        int fstIndex;
-        int sndIndex;
 
         for (int i = 0; i < 3; i++){
 
@@ -124,6 +118,40 @@ public:
             _solution[fstIndex] = _solution[sndIndex];
             _solution[sndIndex] = tempValue;
         }
+
+        _solution.from(_solution.ID());
+        _solution.best(0);
+    }
+};
+
+/*
+ * Triple Standard Mutation operator with fixed mutation rates
+ */
+class StandardMutation : public Mutation {
+public:
+
+    /**
+     * Constructor
+     **/
+    StandardMutation(int _size) : Mutation(_size) {}
+
+    // mutation operator
+    virtual void operator()(Solution & _solution) {
+
+        unsigned fstIndex = rand() % size;
+
+        unsigned sndIndex;
+
+        if(fstIndex + 1 >= _solution.size()){
+            sndIndex = fstIndex - 1;
+        }else{
+            sndIndex = fstIndex + 1;
+        }
+
+        int tempValue = _solution[fstIndex];
+
+        _solution[fstIndex] = _solution[sndIndex];
+        _solution[sndIndex] = tempValue;
 
         _solution.from(_solution.ID());
         _solution.best(0);

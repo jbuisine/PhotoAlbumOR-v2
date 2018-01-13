@@ -16,7 +16,8 @@ using namespace std;
 #include <problems/qap/moead/moQAPEval.h>
 #include <algorithms/moead/mutation.h>
 #include <algorithms/moead/subProblems.h>
-#include <algorithms/moead/moAlgo.h>
+#include <algorithms/moead/moFRRMAB_NR.h>
+#include <algorithms/moead/hyperVolume.h>
 #include <algorithms/moead/init.h>
 
 /***
@@ -37,7 +38,7 @@ using namespace std;
 int main(int argc, char ** argv) {
 
     // getting context files
-    std::string _dataFileName = "./../../application/resources/qap/instance100.txt";
+    std::string _dataFileName = "./../../application/resources/qap/instanceUni_Rl_100.txt";
 
     // Get all params data
     //std::string _dataFileName = argv[1];
@@ -57,11 +58,11 @@ int main(int argc, char ** argv) {
     unsigned mu = 100;
     unsigned T = 20;
     unsigned W = 15;
-    double C = 2.;
-    double D = 0.6;
-    unsigned neighborTaken = 10;
+    double C = sqrt(2.);
+    double D = 0.5;
+    unsigned neighborTaken = 4;
     double pFindNeighbor = 0.5;
-    unsigned duration = 10;
+    unsigned nbEval = 100000;
 
     // init all context info
     QAPUniParser fparser(_dataFileName);
@@ -84,6 +85,7 @@ int main(int argc, char ** argv) {
     mutations.push_back(&mutation1);
     mutations.push_back(&mutation2);
     mutations.push_back(&mutation3);
+
     // End set Operators
 
     InitQAP init;
@@ -95,21 +97,24 @@ int main(int argc, char ** argv) {
 
     sp.print();
 
-    cout << "----Starting FFRMAB----" << endl;
-    FFRMAB algo(eval, sp, init, mutations, repair, mu, C, D, neighborTaken, pFindNeighbor, duration);
+    cout << "----Starting FRRMAB----" << endl;
+    FRRMAB_NR algo(eval, sp, init, mutations, repair, mu, C, D, neighborTaken, pFindNeighbor, nbEval);
 
-    char* fileout = "output.txt"; //argv[12]
+    char* fileout = "./../../application/output.txt"; //argv[12]
 
-    algo.runFRRMAB(fileout);
+    algo.run(fileout);
     ofstream file;
-    file.open ("front_pa.txt", ios::out);
+    file.open ("./../../application/front_pa.txt", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++){
-        file << algo.pop[i].toString() << endl;
         std::cout << algo.pop[i].toString() << std::endl;
     }
     file.close();
 
-    std::cout << "End of FFRMAB (n. eval = " << algo.nbEval << ")" << std::endl;
+    // Stats hyper volume
+    HyperVolume hv;
+
+    std::cout << "End of FRRMAB (n. eval = " << nbEval << ", duration = " << algo.duration << ")" << std::endl;
+    std::cout << "HV : " << hv(algo.pop) << std::endl;
   
     return 0;
 }
