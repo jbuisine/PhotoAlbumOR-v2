@@ -4,3 +4,10 @@ build
 
 # JetBrains
 .idea/*
+
+# RStudio
+application/resources/qap/stats/.RData
+application/resources/qap/stats/.Rhistory
+
+
+
