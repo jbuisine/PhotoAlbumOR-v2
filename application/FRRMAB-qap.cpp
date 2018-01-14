@@ -55,7 +55,7 @@ int main(int argc, char ** argv) {
 
     // default settings
     int seed = 10;
-    unsigned mu = 100;
+    unsigned mu = 1000;
     unsigned T = 20;
     unsigned W = 15;
     double C = sqrt(2.);
@@ -82,8 +82,8 @@ int main(int argc, char ** argv) {
     TripleStandardRndMutation mutation4(problem_size);
 
     //mutations.push_back(&mutation1);
-    mutations.push_back(&mutation2);
     mutations.push_back(&mutation3);
+    mutations.push_back(&mutation2);
     mutations.push_back(&mutation4);
 
     // End set Operators
@@ -100,13 +100,14 @@ int main(int argc, char ** argv) {
     cout << "----Starting FRRMAB----" << endl;
     FRRMAB algo(eval, sp, init, mutations, repair, mu, C, D, nbEval);
 
-    char* fileout = "./../../application/output.txt"; //argv[12]
+    char* fileout = "./../../application/resources/qap/stats/output.txt"; //argv[12]
 
     algo.run(fileout);
     ofstream file;
-    file.open ("./../../application/front_pa.txt", ios::out);
+    file.open ("./../../application/resources/qap/stats/front_pa.txt", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++){
-        std::cout << algo.pop[i].toString() << std::endl;
+        file << algo.pop[i].toString() << endl;
+        //std::cout << algo.pop[i].toString() << std::endl;
     }
     file.close();
 

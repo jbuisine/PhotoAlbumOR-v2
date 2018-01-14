@@ -101,13 +101,14 @@ int main(int argc, char ** argv) {
     cout << "----Starting FRRMAB_NR----" << endl;
     FRRMAB_NR algo(eval, sp, init, mutations, repair, mu, C, D, affinity, nbEval);
 
-    char* fileout = "./../../application/output.txt"; //argv[12]
+    char* fileout = "./../../application/resources/qap/stats/output.txt"; //argv[12]
 
     algo.run(fileout);
     ofstream file;
-    file.open ("./../../application/front_pa.txt", ios::out);
+    file.open ("./../../application/resources/qap/stats/front_pa.txt", ios::out);
     for(unsigned i = 0; i < algo.pop.size(); i++){
-        std::cout << algo.pop[i].toString() << std::endl;
+        file << algo.pop[i].toString() << endl;
+        //std::cout << algo.pop[i].toString() << std::endl;
     }
     file.close();
 

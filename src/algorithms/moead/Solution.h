@@ -51,6 +51,10 @@ public:
         this->dirInfo = _dir;
     }
 
+    void op(unsigned _op){
+        this->opUsed = _op;
+    }
+
     /**
      * Setters
      */
@@ -78,6 +82,10 @@ public:
         return dirInfo;
     }
 
+    unsigned op(){
+        return opUsed;
+    }
+
     virtual void print() = 0;
 
 protected:
@@ -88,6 +96,7 @@ protected:
     int bestInfo;
     unsigned fromInfo;
     unsigned dirInfo;
+    unsigned opUsed;
 
     // size and fitness value
     unsigned n;
