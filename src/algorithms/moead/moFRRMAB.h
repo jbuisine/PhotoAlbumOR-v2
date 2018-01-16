@@ -74,7 +74,6 @@ public:
             pop[i].dir(i);
             pop[i].from(-1);
             pop[i].best(1);
-            pop[i].op(-1);
             pop[i].save(file);
         }
 
@@ -91,7 +90,6 @@ public:
 
             mutant = pop[i];
             mutant.best(0);
-            mutant.op(selectedOpIndex);
 
             //while (!sHM.isNewSol(mutant)) {
                 mutation(mutant);

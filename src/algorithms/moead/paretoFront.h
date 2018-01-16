@@ -1,0 +1,8 @@
+//
+// Created by jbuisine on 16/01/18.
+//
+
+#ifndef PHOTOALBUM_PARETOFRONT_H
+#define PHOTOALBUM_PARETOFRONT_H
+
+#endif //PHOTOALBUM_PARETOFRONT_H
