@@ -54,8 +54,8 @@ public:
     
     fprintf(fileout, "%d %lf ", this->ID(), this->fitness());
     for(i = 0; i < objvec.size(); i++) fprintf(fileout, "%lf ", objvec[i]);
-    for(i = 0; i < this->size(); i++) fprintf(fileout, "%d ", this->operator[](i));
-    fprintf(fileout, "%d %d %d\n", this->dir(), this->from(), this->best());
+    //for(i = 0; i < this->size(); i++) fprintf(fileout, "%d ", this->operator[](i));
+    fprintf(fileout, "%d %d %d %d\n", this->dir(), this->from(), this->best(), this->op());
     fflush(fileout);
   }
 

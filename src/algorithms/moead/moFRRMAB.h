@@ -44,7 +44,7 @@ public:
             unusedOp.at(j) = true;
 
             // init each pair(OpID, FFR value) of sub problem
-            FFRs.insert(std::make_pair(j, 0.));
+            FRRs.insert(std::make_pair(j, 0.));
         }
     }
 
@@ -74,6 +74,7 @@ public:
             pop[i].dir(i);
             pop[i].from(-1);
             pop[i].best(1);
+            pop[i].op(-1);
             pop[i].save(file);
         }
 
@@ -90,6 +91,7 @@ public:
 
             mutant = pop[i];
             mutant.best(0);
+            mutant.op(selectedOpIndex);
 
             //while (!sHM.isNewSol(mutant)) {
                 mutation(mutant);
@@ -156,7 +158,7 @@ protected:
     * Adaptive Operator Selection variables
     */
     // FRR values
-    std::map<int, double> FFRs;
+    std::map<int, double> FRRs;
     // nop : number of op present of slidingWindow
     std::vector<int> nop;
     // non selected op sub problem
@@ -249,12 +251,12 @@ private:
             decaySum += decays.at(op);
         }
 
-        // Compute new FFRs value
+        // Compute new FRRs value
         for (unsigned op = 0; op < mutations.size(); op++) {
             if(decaySum != 0)
-                FFRs.at(op) = decays.at(op) / decaySum;
+                FRRs.at(op) = decays.at(op) / decaySum;
             else
-                FFRs.at(op) = 0.;
+                FRRs.at(op) = 0.;
         }
     }
 
@@ -306,12 +308,22 @@ private:
             }
 
             // search best op at time t for subProblem
-            for (unsigned i = 0; i < FFRs.size(); i++) {
+            for (unsigned i = 0; i < FRRs.size(); i++) {
 
                 double explorationValue = sqrt((2 * log(nopSum)) / nop.at(i));
-                double currentValue = FFRs.at(i) + (C * explorationValue);
+                double currentValue = FRRs.at(i) + (C * explorationValue);
 
                 if (currentValue > maxValue) {
+
+                    // random choice to change op value if equal
+                    if(currentValue == maxValue){
+                        double p = ((double) rand() / (RAND_MAX));
+
+                        if(p < 0.5){
+                            continue;
+                        }
+                    }
+
                     maxValue = currentValue;
                     selectedOp = i;
                 }

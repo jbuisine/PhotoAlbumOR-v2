@@ -18,6 +18,7 @@ using namespace std;
 #include <algorithms/moead/subProblems.h>
 #include <algorithms/moead/moFRRMAB.h>
 #include <algorithms/moead/hyperVolume.h>
+#include <algorithms/moead/paretoFront.h>
 #include <algorithms/moead/init.h>
 
 /***
@@ -60,7 +61,7 @@ int main(int argc, char ** argv) {
     unsigned W = 15;
     double C = sqrt(2.);
     double D = 0.5;
-    unsigned nbEval = 100000;
+    unsigned nbEval = 1000000;
 
     // init all context info
     QAPUniParser fparser(_dataFileName);
@@ -81,11 +82,10 @@ int main(int argc, char ** argv) {
     DoubleStandardRndMutation mutation3(problem_size);
     TripleStandardRndMutation mutation4(problem_size);
 
-    //mutations.push_back(&mutation1);
-    mutations.push_back(&mutation2);
     mutations.push_back(&mutation3);
-    mutations.push_back(&mutation4);
-
+    mutations.push_back(&mutation2);
+    mutations.push_back(&mutation1);
+    //mutations.push_back(&mutation4);
     // End set Operators
 
     InitQAP init;
@@ -93,20 +93,26 @@ int main(int argc, char ** argv) {
     // init decomposition with WeightedSum mono objective function
     WeightedSumSubProblems sp(mu, 0.0, 0.0, T, W);
 
-    HillClimber repair(1000, eval, sp, mutation1);
+    HillClimber repair(100, eval, sp, mutation1);
 
     sp.print();
 
     cout << "----Starting FRRMAB----" << endl;
     FRRMAB algo(eval, sp, init, mutations, repair, mu, C, D, nbEval);
 
-    char* fileout = "./../../application/output.txt"; //argv[12]
+    char* fileout = "./../../application/resources/qap/stats/output.txt"; //argv[12]
 
     algo.run(fileout);
+
+
+    // getting pareto front from population
+    ParetoFront paretoFront;
+    std::vector<moSolution> pf = paretoFront(algo.pop, true);
+
     ofstream file;
-    file.open ("./../../application/front_pa.txt", ios::out);
-    for(unsigned i = 0; i < algo.pop.size(); i++){
-        std::cout << algo.pop[i].toString() << std::endl;
+    file.open ("./../../application/resources/qap/stats/front_pa.txt", ios::out);
+    for(unsigned i = 0; i < pf.size(); i++){
+        file << pf[i].toString() << endl;
     }
     file.close();
 
@@ -114,7 +120,7 @@ int main(int argc, char ** argv) {
     HyperVolume hv;
 
     std::cout << "End of FRRMAB (n. eval = " << nbEval << ", duration = " << algo.duration << ")" << std::endl;
-    std::cout << "HV : " << hv(algo.pop) << std::endl;
+    std::cout << "HV : " << hv(pf) << std::endl;
   
     return 0;
 }
