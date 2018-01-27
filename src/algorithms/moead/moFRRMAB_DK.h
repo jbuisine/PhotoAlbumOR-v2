@@ -12,6 +12,7 @@
 #include <algorithms/moead/repair.h>
 #include <algorithms/moead/mutation.h>
 #include <algorithms/moead/moAlgo.h>
+#include <algorithms/moead/paretoFront.h>
 //#include "checkSol.h"
 
 /**
@@ -20,9 +21,9 @@
  **/
 class FRRMAB_DK : public MultiObjectiveAlgo {
 public:
-    FRRMAB_DK(moEval &_eval, SubProblems &_subproblems, InitQAP &_init, std::vector<Mutation*> &_mutations, Repair &_repair,
+    FRRMAB_DK(moEval &_eval, SubProblems &_subproblems, bool _pbType, InitQAP &_init, std::vector<Mutation*> &_mutations, Repair &_repair,
            unsigned _mu, double _C, double _D, double _affinity, unsigned _maxEval)
-            : evaluation(_eval), subProblems(_subproblems), initialization(_init), mutations(_mutations), repair(_repair), mu(_mu),
+            : evaluation(_eval), subProblems(_subproblems), pbType(_pbType), initialization(_init), mutations(_mutations), repair(_repair), mu(_mu),
               C(_C), D(_D), affinity(_affinity), maxEval(_maxEval)  {
 
         // Initialization
@@ -68,6 +69,9 @@ public:
         unsigned nbEval = 0;
         time_t begintime = time(NULL);
 
+        // convert pop into pf
+        ParetoFront paretoFront;
+
         // output file header
         FILE *file = fopen(fileout, "w");
 
@@ -86,6 +90,8 @@ public:
             pop[i].best(1);
             pop[i].op(-1);
             pop[i].save(file);
+            // add this solution into pf pop
+            pfPop.push_back(pop[i]);
         }
 
         moSolution mutant;
@@ -138,6 +144,11 @@ public:
                 }
             }
 
+            if(FIRop > 0){
+                pfPop.push_back(pop[i]);
+                pfPop = paretoFront(pfPop, pbType);
+            }
+
             // set new FIR value into sliding window of sub problem i
             updateSlidingWindow(i, selectedOpIndex, FIRop);
 
@@ -184,6 +195,8 @@ protected:
     double affinity;
     // max evaluation of algo
     unsigned maxEval;
+    // king of problem (minimize true or maximize false)
+    bool pbType;
 
 private:
 

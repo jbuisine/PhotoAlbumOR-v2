@@ -7,7 +7,7 @@
 
 class MultiObjectiveAlgo {
 public:
-    std::vector<moSolution> pop ;
+    std::vector<moSolution> pfPop;
     unsigned maxEval;
     unsigned duration;
     /**
@@ -15,6 +15,9 @@ public:
     * @param fileout
     */
     virtual void run(char *fileout) = 0;
+
+protected:
+    std::vector<moSolution> pop;
 };
 
 

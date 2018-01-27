@@ -98,16 +98,15 @@ int main(int argc, char ** argv) {
     sp.print();
 
     cout << "----Starting FRRMAB----" << endl;
-    FRRMAB algo(eval, sp, init, mutations, repair, mu, C, D, nbEval);
+    FRRMAB algo(eval, sp, true, init, mutations, repair, mu, C, D, nbEval);
 
     char* fileout = "./../../application/resources/qap/stats/output.txt"; //argv[12]
 
     algo.run(fileout);
 
 
-    // getting pareto front from population
-    ParetoFront paretoFront;
-    std::vector<moSolution> pf = paretoFront(algo.pop, true);
+    // getting pareto front from algo
+    std::vector<moSolution> pf = algo.pop;
 
     ofstream file;
     file.open ("./../../application/resources/qap/stats/front_pa.txt", ios::out);

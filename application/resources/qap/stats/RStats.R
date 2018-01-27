@@ -1,3 +1,5 @@
+library(ggplot2)
+
 this.dir <- dirname(parent.frame(2)$ofile)
 setwd(this.dir)
 
@@ -6,14 +8,17 @@ readFile <- function(filename){
 }
 
 dfStats <- readFile("output.txt")
-dfPF <- readFile("front_pa.txt")
+dfPF_FRRMAB <- readFile("front_pa_frrmab.txt")
+dfPF_FRRMAB_DK <- readFile("front_pa_frrmab_dk.txt")
 
 # Erase sol index info
-dfPF <- dfPF[, 1:3]
+dfPF_FRRMAB <- dfPF_FRRMAB[, 1:3]
+dfPF_FRRMAB_DK <- dfPF_FRRMAB_DK[, 1:3]
 
 # head of dfStats
 names(dfStats) <- c("ID", "Fitness", "Obj1", "Obj2", "DIR", "FROM", "BEST", "OP")
-names(dfPF) <- c("Fitness", "Obj1", "Obj2")
+names(dfPF_FRRMAB) <- c("Fitness", "Obj1", "Obj2")
+names(dfPF_FRRMAB_DK) <- c("Fitness", "Obj1", "Obj2")
 
 drawOpDistrubution <- function(){
   
@@ -26,13 +31,7 @@ drawOpDistrubution <- function(){
 
 drawPF <- function(){
   
-  plot(dfPF$Obj1 ~ dfPF$Obj2,
-       main = "Pareto front",
-       xlab = "Objective 2",
-       ylab = "Objective 1")
+  ggplot() + 
+    geom_point(data=dfPF_FRRMAB, aes(x=Obj1, y=Obj2), color='blue') + geom_smooth(method = 'loess') 
 }
-
-p1<-ggplot(dfStats, aes(x=Obj1, y=Obj2, colour="Black")) + 
-  geom_smooth(se=F)
-p1
 

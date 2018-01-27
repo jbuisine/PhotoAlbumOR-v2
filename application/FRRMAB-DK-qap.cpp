@@ -7,10 +7,6 @@
 
 #include <iostream>
 #include <fstream>
-//#include "mpicxx.h"
-//#include "mpi.h"
-
-using namespace std;
 
 #include <algorithms/moead/moSolution.h>
 #include <problems/qap/moead/moQAPEval.h>
@@ -21,6 +17,11 @@ using namespace std;
 #include <algorithms/moead/paretoFront.h>
 #include <algorithms/moead/init.h>
 
+
+//#include "mpicxx.h"
+//#include "mpi.h"
+
+using namespace std;
 /***
  * Main
  *
@@ -100,18 +101,17 @@ int main(int argc, char ** argv) {
     sp.print();
 
     cout << "----Starting FRRMAB_NR----" << endl;
-    FRRMAB_DK algo(eval, sp, init, mutations, repair, mu, C, D, affinity, nbEval);
+    FRRMAB_DK algo(eval, sp, true, init, mutations, repair, mu, C, D, affinity, nbEval);
 
     char* fileout = "./../../application/resources/qap/stats/output.txt"; //argv[12]
 
     algo.run(fileout);
 
     // getting pareto front from population
-    ParetoFront paretoFront;
-    std::vector<moSolution> pf = paretoFront(algo.pop, true);
+    std::vector<moSolution> pf = algo.pfPop;
 
     ofstream file;
-    file.open ("./../../application/resources/qap/stats/front_pa.txt", ios::out);
+    file.open ("./../../application/resources/qap/stats/front_pa_frrmab_dk.txt", ios::out);
     for(unsigned i = 0; i < pf.size(); i++){
         file << pf[i].toString() << endl;
     }
